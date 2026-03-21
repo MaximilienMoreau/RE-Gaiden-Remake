@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resident Evil Gaiden | Remake</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="loading-screen">
+            <div class="loading-logo">
+                <div class="umbrella-logo"></div>
+                <h1>BIOHAZARD</h1>
+                <h2>GAIDEN</h2>
+                <p class="subtitle">REMAKE</p>
+            </div>
+            <div class="loading-bar-container">
+                <div id="loading-bar"></div>
+            </div>
+            <p id="loading-text">INITIALIZING...</p>
+        </div>
+        <div id="phaser-game"></div>
+    </div>
+
+    <!-- Phaser 3 -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+
+    <!-- Game data & utils -->
+    <script src="js/Config.js"></script>
+    <script src="js/utils/AssetGenerator.js"></script>
+    <script src="js/utils/AudioSynth.js"></script>
+
+    <!-- Game data -->
+    <script src="js/data/Items.js"></script>
+    <script src="js/data/Enemies.js"></script>
+    <script src="js/data/Maps.js"></script>
+    <script src="js/data/Dialogues.js"></script>
+
+    <!-- Systems -->
+    <script src="js/systems/EventSystem.js"></script>
+    <script src="js/systems/SaveSystem.js"></script>
+    <script src="js/systems/InventorySystem.js"></script>
+
+    <!-- Entities -->
+    <script src="js/entities/Interactable.js"></script>
+    <script src="js/entities/NPC.js"></script>
+    <script src="js/entities/Enemy.js"></script>
+    <script src="js/entities/Player.js"></script>
+
+    <!-- Scenes -->
+    <script src="js/scenes/BootScene.js"></script>
+    <script src="js/scenes/TitleScene.js"></script>
+    <script src="js/scenes/PrologueScene.js"></script>
+    <script src="js/scenes/HUDScene.js"></script>
+    <script src="js/scenes/DialogueScene.js"></script>
+    <script src="js/scenes/InventoryScene.js"></script>
+    <script src="js/scenes/CombatScene.js"></script>
+    <script src="js/scenes/GameScene.js"></script>
+    <script src="js/scenes/GameOverScene.js"></script>
+    <script src="js/scenes/EndingScene.js"></script>
+
+    <!-- Entry point -->
+    <script src="js/main.js"></script>
+</body>
+</html>
