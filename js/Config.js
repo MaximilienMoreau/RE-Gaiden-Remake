@@ -70,7 +70,7 @@ const CONFIG = {
 
     // Game flags used by SaveSystem
     FLAGS: {
-        ACT1_BARRY_FOUND: 'act1_barry_found',
+        ACT1_LEON_FOUND: 'act1_leon_found',
         ACT1_RADIO_FOUND: 'act1_radio_found',
         ACT2_LUCIA_LOCATED: 'act2_lucia_located',
         ACT2_LAB_KEY_FOUND: 'act2_lab_key_found',

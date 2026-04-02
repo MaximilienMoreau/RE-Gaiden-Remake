@@ -219,28 +219,28 @@ Eliminate all witnesses. Destroy vessel. Report: "Mechanical failure. No survivo
 
 — Director Wesker, Umbrella Special Operations`,
     },
-    NOTE_BARRY: {
-        id: 'note_barry',
-        name: "Barry's Note",
-        desc: 'A hastily written note. Barry\'s handwriting.',
+    NOTE_LEON: {
+        id: 'note_leon',
+        name: "Leon's Note",
+        desc: 'A hastily written note. Leon\'s handwriting.',
         type: 'file',
         icon: 'item_diary',
         size: [1, 1],
         stackable: false,
-        fileContent: `Leon —
+        fileContent: `Barry —
 
-If you're reading this, you made it aboard. Good.
-I've been on this ship for 12 hours. The situation is FUBAR.
+If you're reading this, USSTRATCOM sent you. Good.
+I've been aboard for six hours. Radio is gone. Situation is FUBAR.
 
-The girl — Lucia — is real. Whatever Umbrella did to her, she survived it. Her blood shows complete T-virus antibody resistance. She's the asset USSTRATCOM wants. She's also the only person on this ship who isn't trying to eat me.
+The girl — Lucia — is real. Umbrella calls her Subject KD-1. Complete T-virus immunity. She is the only reason this ship exists. Keep her alive.
 
-I last saw her near the restaurant. Level 2. She was heading for the engine room, said she knew a way to the lower decks.
+I last saw her near the restaurant, Level 2. She was heading for the engine room. Said she knew a service boat route to the lower decks.
 
-Watch for the big one. I shot it three times with the .357 and it just walked away. Not a Tyrant — something else. Something that thinks.
+Watch for the big one. I emptied half a magazine into it and it kept walking. Not a Tyrant — something different. Something that watches you back.
 
-Don't trust anyone who looks like you.
+Don't trust anyone who looks like me.
 
-— B`,
+— L`,
     },
     LUCIA_LETTER: {
         id: 'lucia_letter',

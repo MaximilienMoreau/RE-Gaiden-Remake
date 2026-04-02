@@ -1,5 +1,5 @@
 /**
- * Player - Leon S. Kennedy player entity
+ * Player - Barry Burton player entity
  */
 class Player extends Phaser.GameObjects.Container {
     constructor(scene, tx, ty) {
@@ -36,13 +36,16 @@ class Player extends Phaser.GameObjects.Container {
         this.add(shadow);
 
         // Main sprite
-        if (this.scene.textures.exists('leon')) {
-            this._sprite = this.scene.add.image(0, 0, 'leon');
+        if (this.scene.textures.exists('barry')) {
+            this._sprite = this.scene.add.image(0, 0, 'barry');
             this._sprite.setDisplaySize(24, 36);
         } else {
+            // Barry: tan/brown jacket, broader silhouette
             this._sprite = this.scene.add.graphics();
-            this._sprite.fillStyle(0x1a2040);
-            this._sprite.fillRect(-10, -16, 20, 32);
+            this._sprite.fillStyle(0x7a3b2e); // rust-brown jacket
+            this._sprite.fillRect(-11, -16, 22, 28);
+            this._sprite.fillStyle(0x4a2a1e); // darker trousers
+            this._sprite.fillRect(-9, 12, 18, 8);
         }
         this.add(this._sprite);
 

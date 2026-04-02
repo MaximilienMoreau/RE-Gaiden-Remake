@@ -9,43 +9,44 @@ const DIALOGUES = {
     prologue: [
         { speaker: 'SYSTEM', text: 'September 14, 2002.', style: 'system' },
         { speaker: 'SYSTEM', text: 'Three years after the destruction of Raccoon City.', style: 'system' },
-        { speaker: 'SYSTEM', text: 'The United States Strategic Command — USSTRATCOM —\nhas quietly expanded its biological threat division\nin the wake of the T-virus outbreak.', style: 'system' },
-        { speaker: 'SYSTEM', text: 'Their best operative:', style: 'system' },
-        { speaker: 'SYSTEM', text: 'LEON SCOTT KENNEDY\nFormer R.P.D. Raccoon City — Sole Survivor\nCurrent: USSTRATCOM Field Agent — Classified', style: 'highlight' },
-        { speaker: 'SYSTEM', text: 'A distress signal of unknown origin was received\nfrom the luxury cruise liner M.S. STARLIGHT,\ncurrently drifting 200 nautical miles off the coast\nof the Mediterranean.', style: 'system' },
-        { speaker: 'SYSTEM', text: 'Signal content: "OUTBREAK. ALL DEAD. GOD HELP US."', style: 'red' },
-        { speaker: 'SYSTEM', text: 'USSTRATCOM intelligence suggests a person of interest\nis aboard — a young girl with a unique biological profile\ndesignated by Umbrella as Subject KD-1.\nCodename: LUCIA.', style: 'system' },
-        { speaker: 'SYSTEM', text: 'Leon was dropped by helicopter onto the Starlight\'s\naft deck at 02:14 hours.', style: 'system' },
-        { speaker: 'SYSTEM', text: 'He was told to find the girl and get out.\nNo other survivors necessary.', style: 'system' },
-        { speaker: 'LEON', text: 'No survivors necessary. That\'s a hell of a briefing.', portrait: 'leon' },
-        { speaker: 'SYSTEM', text: 'He didn\'t follow those orders last time either.', style: 'dim' },
+        { speaker: 'SYSTEM', text: 'The United States Strategic Command — USSTRATCOM —\nsent their best field agent to investigate reports\nof a bioterrorism incident aboard a luxury cruise liner.', style: 'system' },
+        { speaker: 'SYSTEM', text: 'LEON SCOTT KENNEDY.\nFormer R.P.D. Raccoon City.\nHe boarded the M.S. STARLIGHT six hours ago.', style: 'system' },
+        { speaker: 'SYSTEM', text: 'He never reported back.', style: 'red' },
+        { speaker: 'SYSTEM', text: 'BARRY BURTON\nFormer S.T.A.R.S. — Raccoon City — Alpha Team\nCurrent: Private Sector. Semi-retired.\nStatus: Activated — Emergency Protocol', style: 'highlight' },
+        { speaker: 'SYSTEM', text: 'USSTRATCOM reached out through back channels.\nNot a request. A favor owed.', style: 'system' },
+        { speaker: 'SYSTEM', text: 'The M.S. STARLIGHT — 200 nautical miles off the\nMediterranean coast. Drifting. No distress beacon.\nNo radio contact. No sign of life.', style: 'system' },
+        { speaker: 'SYSTEM', text: 'Umbrella\'s fingerprints were all over the intel.\nAnd a girl — a young girl — was reported aboard.\nDesignated by Umbrella as Subject KD-1.\nCodename: LUCIA.', style: 'system' },
+        { speaker: 'SYSTEM', text: 'Barry was dropped by helicopter onto the Starlight\'s\naft deck at 02:14 hours.', style: 'system' },
+        { speaker: 'SYSTEM', text: 'He was told to find Leon. Find the girl. Get them out.', style: 'system' },
+        { speaker: 'BARRY', text: 'Leon, you had better be alive. I did not come all this way to carry a body bag.', portrait: 'barry' },
+        { speaker: 'SYSTEM', text: 'He\'d said the same thing once before. In a mansion, a lifetime ago.', style: 'dim' },
     ],
 
     // =========================================================
-    // ACT 1 — FIRST MEETING WITH BARRY
+    // ACT 1 — FIRST MEETING WITH LEON
     // =========================================================
-    act1_barry_first_meeting: [
-        { speaker: 'BARRY', text: 'You\'re Leon Kennedy. I\'d recognize those cheekbones anywhere.', portrait: 'barry' },
-        { speaker: 'LEON', text: 'Barry Burton. USSTRATCOM told me you\'d already be aboard.', portrait: 'leon' },
-        { speaker: 'BARRY', text: 'They told me you were dead. Nice to be proven wrong.', portrait: 'barry' },
-        { speaker: 'LEON', text: 'I get that a lot. What\'s the situation?', portrait: 'leon' },
-        { speaker: 'BARRY', text: 'The situation is a category five nightmare. Full outbreak. Every deck I\'ve been to — passengers, crew — all infected. Something tore the medical bay apart from the inside. I found this.', portrait: 'barry' },
-        { speaker: 'BARRY', text: '[He holds up the Umbrella memo]', style: 'action' },
-        { speaker: 'LEON', text: '...They chartered this ship for a transport run.', portrait: 'leon' },
-        { speaker: 'BARRY', text: 'And whatever was in Container REG-07 is loose. I\'ve seen it. Shot it. Didn\'t do much. Leon — it looked at me like it was thinking.', portrait: 'barry' },
-        { speaker: 'LEON', text: 'Adaptive mimicry... I\'ve seen files on something like this. Never field deployment. Where\'s the girl?', portrait: 'leon' },
-        { speaker: 'BARRY', text: 'Last seen heading through the restaurant toward the lower decks. She\'s fast and she\'s smart. She left me a note. Says she\'s trying to reach a service boat in the engine room.', portrait: 'barry' },
+    act1_leon_first_meeting: [
+        { speaker: 'BARRY', text: 'Leon. Leon Kennedy — is that you?', portrait: 'barry' },
+        { speaker: 'LEON', text: 'Barry? What are you doing here? USSTRATCOM sent you?', portrait: 'leon' },
+        { speaker: 'BARRY', text: 'They called in a favor. Said you went dark six hours ago. I figured... hell, I figured someone had to come.', portrait: 'barry' },
+        { speaker: 'LEON', text: 'I got separated. Lost my radio on deck two. It\'s bad, Barry. Worse than the intel said.', portrait: 'leon' },
+        { speaker: 'BARRY', text: 'I noticed. Full outbreak — every deck, every corridor. And something else. Something I shot twice and it kept walking.', portrait: 'barry' },
+        { speaker: 'LEON', text: '[He nods grimly]', style: 'action' },
+        { speaker: 'LEON', text: 'I\'ve seen it too. It\'s out of Container REG-07 — the one that wasn\'t on the manifest. Adaptive mimicry. I\'ve seen classified files on the concept but never a deployment.', portrait: 'leon' },
+        { speaker: 'BARRY', text: 'It looked at me like it was thinking. Like it was... memorizing me.', portrait: 'barry' },
+        { speaker: 'LEON', text: 'That\'s exactly what it was doing. Where\'s the girl, Barry? LUCIA — Subject KD-1. She\'s the reason this ship exists.', portrait: 'leon' },
+        { speaker: 'BARRY', text: 'Last seen heading through the restaurant toward the lower decks. Fast. Smart. Left a note — says she\'s trying to reach a service boat in the engine room.', portrait: 'barry' },
         { speaker: 'LEON', text: 'Then that\'s where we go.', portrait: 'leon' },
         { speaker: 'BARRY', text: 'Together?', portrait: 'barry' },
-        { speaker: 'LEON', text: 'You said you shot it and it walked away. Yeah, together.', portrait: 'leon' },
+        { speaker: 'LEON', text: 'You came all this way alone. Yeah, together.', portrait: 'leon' },
     ],
 
     // =========================================================
-    // ACT 1 — FINDING BARRY'S NOTE (before meeting)
+    // ACT 1 — FINDING LEON'S NOTE (before meeting)
     // =========================================================
-    act1_barry_note_found: [
-        { speaker: 'LEON', text: 'Barry\'s handwriting. He made it this far.', portrait: 'leon' },
-        { speaker: 'LEON', text: '"Don\'t trust anyone who looks like you." What the hell does that mean?', portrait: 'leon' },
+    act1_leon_note_found: [
+        { speaker: 'BARRY', text: 'Leon\'s handwriting. He made it this far.', portrait: 'barry' },
+        { speaker: 'BARRY', text: '"Don\'t trust anyone who looks like you." What the hell does that mean?', portrait: 'barry' },
     ],
 
     // =========================================================
@@ -190,20 +191,21 @@ const DIALOGUES = {
     // =========================================================
     // NPC AMBIENT LINES
     // =========================================================
-    barry_ambient: [
+    barry_monologue: [
+        'Raccoon City was supposed to be the last time.',
+        'The smell of it. You never forget it.',
+        'Leon — where are you. Stay alive.',
+        'Find Leon. Find the girl. Get out. Simple. Nothing is ever simple.',
+        'Jill would have something smart to say right now.',
+        'I told my family I was going fishing.',
+    ],
+
+    leon_ambient: [
         'Stay close. The corridors narrow up ahead.',
         'I\'ve got 38 rounds left. Make them count.',
         'This smell... same as Raccoon City. God, I never wanted to smell this again.',
-        'Jill would have something smart to say right now.',
         'Keep your eyes up. They don\'t always come at ground level.',
         'These lickers are sensitive to sound. Walk slow.',
-    ],
-
-    leon_monologue: [
-        'Raccoon City was supposed to be the last time.',
-        'The smell of it. You never forget it.',
-        'Somewhere on this ship is the reason all these people are dead.',
-        'Find the girl. Get out. Simple. Nothing is ever simple.',
         'Barry\'s holding something back. He always does when something scares him.',
     ],
 
@@ -238,6 +240,6 @@ const DIALOGUES = {
         umbrella_container: 'One of six sealed containers. Umbrella markings. The refrigeration unit is still running. The contents are labeled "REG-01 through REG-06: T-VIRUS CULTURE." These are intact.',
         umbrella_container_open: 'Container REG-07. Open. The interior restraints are shredded from the inside. Whatever was in here wanted out badly enough.',
         typewriter: 'An old portable typewriter. In this room, with this quiet — you can almost believe you\'re safe. Almost.',
-        mirror_cabin: 'Your reflection. Leon looks back at you. For a moment, you study the face — checking it\'s still yours.',
+        mirror_cabin: 'Your reflection. Barry looks back at you. You study the face — older than you remember. Tired. Still here.',
     },
 };

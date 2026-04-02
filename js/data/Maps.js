@@ -91,7 +91,7 @@ const MAPS = {
             { type: 'door', tx: 1, ty: 1, doorId: 'door_cabin_101', locked: false },
             { type: 'door', tx: 18, ty: 1, doorId: 'door_cabin_102', locked: false },
             { type: 'door', tx: 1, ty: 10, doorId: 'door_cabin_103', locked: true, keyId: 'key_cabin' },
-            { type: 'note', tx: 9, ty: 5, noteId: 'note_barry' },
+            { type: 'note', tx: 9, ty: 5, noteId: 'note_leon' },
         ],
         connections: {
             north: { tx: 9, ty: 1, targetRoom: 'aft_deck', targetTx: 9, targetTy: 13 },
@@ -201,7 +201,7 @@ const MAPS = {
             { type: 'enemy', tx: 16, ty: 12, enemyId: 'zombie_sailor' },
             { type: 'item', tx: 21, ty: 5, itemId: 'herb_green' },
             { type: 'item', tx: 2, ty: 12, itemId: 'ammo_9mm' },
-            { type: 'npc_trigger', tx: 5, ty: 16, npcId: 'barry', dialogueId: 'act1_barry_first_meeting', once: true },
+            { type: 'npc_trigger', tx: 5, ty: 16, npcId: 'leon', dialogueId: 'act1_leon_first_meeting', once: true },
             { type: 'examine', tx: 5, ty: 3, text: 'examine.blood_on_wall' },
         ],
         connections: {
