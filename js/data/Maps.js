@@ -59,7 +59,7 @@ const MAPS = {
             { type: 'trigger', tx: 10, ty: 1, eventId: 'prologue_arrived', once: true },
         ],
         connections: {
-            south: { tx: 9, ty: 14, targetRoom: 'deck_corridor_a', targetTx: 9, targetTy: 1 },
+            south: { tx: 9, ty: 13, targetRoom: 'deck_corridor_a', targetTx: 9, targetTy: 1 },
         },
         cutsceneOnEnter: null,
     },
