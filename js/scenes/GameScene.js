@@ -45,6 +45,7 @@ class GameScene extends Phaser.Scene {
         const state = SaveSystem.getState();
         const roomId = this._fromSave ? state.player.currentRoom : this._startRoomId;
         this._loadRoom(roomId, null, null, true);
+        this._isBusy = false;
 
         this.cameras.main.fadeIn(800, 0, 0, 0);
     }
@@ -132,7 +133,9 @@ class GameScene extends Phaser.Scene {
             });
         }
 
-        this._isBusy = false;
+        // NOTE: _isBusy is intentionally NOT cleared here.
+        // It is released by the caller (_transitionToRoom) after the fade-in
+        // completes, to prevent double-transitions during the fade animation.
     }
 
     _clearRoom() {
@@ -398,6 +401,7 @@ class GameScene extends Phaser.Scene {
     // =========================================================
     _checkRoomTransitions() {
         if (!this._player || this._isBusy) return;
+        if (this._transitionCooldown && this.time.now < this._transitionCooldown) return;
         const roomDef = MAPS[this._currentRoomId];
         if (!roomDef?.connections) return;
 
@@ -442,7 +446,12 @@ class GameScene extends Phaser.Scene {
                 this._cutsceneTriggers = [];
                 this._bossTriggers = [];
                 this._loadRoom(roomId, targetTx, targetTy);
-                this.cameras.main.fadeIn(500, 0, 0, 0);
+                this.cameras.main.fadeIn(500, 0, 0, 0, (_, progress2) => {
+                    if (progress2 === 1) {
+                        this._transitionCooldown = this.time.now + 800;
+                        this._isBusy = false;
+                    }
+                });
             }
         });
     }
@@ -828,10 +837,10 @@ class GameScene extends Phaser.Scene {
         const screenY = (this._player.y - camY) * zoom;
 
         this._darknessLayer.clear();
-        this._darknessLayer.fill(0x000000, 0.75);
+        this._darknessLayer.fill(0x000000, 0.25);
 
         // Erase a circle (flashlight)
-        const radius = 120;
+        const radius = 200;
         this._darknessLayer.erase('noise', screenX - radius, screenY - radius, radius * 2, radius * 2);
 
         // Small ambient glow
