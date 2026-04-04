@@ -388,8 +388,12 @@ class CombatScene extends Phaser.Scene {
     }
 
     _buildInstructions(W, H) {
-        this._instructionText = this.add.text(W / 2, H * 0.93, 'TIME YOUR SHOT — AIM FOR THE CENTER', {
+        this._instructionText = this.add.text(W / 2, H * 0.91, 'VISER LE CENTRE POUR FRAPPER CRITIQUE', {
             fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#446688', letterSpacing: 3,
+        }).setOrigin(0.5);
+
+        this.add.text(W / 2, H * 0.96, 'ESPACE / F — Tirer  ·  H — Utiliser soin', {
+            fontSize: '8px', fontFamily: 'Share Tech Mono', color: '#4a4a4a', letterSpacing: 1,
         }).setOrigin(0.5);
     }
 

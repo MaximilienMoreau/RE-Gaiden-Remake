@@ -167,6 +167,37 @@ const AssetGenerator = {
                 gfx.strokeRect(0, 0, S, S);
                 gfx.generateTexture('obstacle', S, S);
             },
+            door_passage: () => {
+                gfx.clear();
+                // Frame extérieur en acier sombre
+                gfx.fillStyle(0x1a2230);
+                gfx.fillRect(0, 0, S, S);
+                // Panneau gauche de la porte coulissante
+                gfx.fillStyle(0x2a3a50);
+                gfx.fillRect(1, 1, S / 2 - 2, S - 2);
+                // Panneau droit
+                gfx.fillStyle(0x243245);
+                gfx.fillRect(S / 2 + 1, 1, S / 2 - 2, S - 2);
+                // Ligne centrale (fente de séparation)
+                gfx.fillStyle(0x080c14);
+                gfx.fillRect(S / 2 - 1, 0, 2, S);
+                // Bandes horizontales (nervures métal)
+                gfx.lineStyle(1, 0x354a62, 0.7);
+                gfx.beginPath(); gfx.moveTo(1, S * 0.3); gfx.lineTo(S / 2 - 2, S * 0.3); gfx.strokePath();
+                gfx.beginPath(); gfx.moveTo(1, S * 0.7); gfx.lineTo(S / 2 - 2, S * 0.7); gfx.strokePath();
+                gfx.beginPath(); gfx.moveTo(S / 2 + 2, S * 0.3); gfx.lineTo(S - 1, S * 0.3); gfx.strokePath();
+                gfx.beginPath(); gfx.moveTo(S / 2 + 2, S * 0.7); gfx.lineTo(S - 1, S * 0.7); gfx.strokePath();
+                // Bande lumineuse verte en bas (indicateur passage ouvert)
+                gfx.fillStyle(0x00cc66);
+                gfx.fillRect(3, S - 4, S - 6, 2);
+                // Léger reflet en haut
+                gfx.fillStyle(0x4a6080, 0.5);
+                gfx.fillRect(2, 2, S - 4, 3);
+                // Bordure extérieure
+                gfx.lineStyle(2, 0x3a5070, 1);
+                gfx.strokeRect(0, 0, S, S);
+                gfx.generateTexture('door_passage', S, S);
+            },
         };
 
         for (const key of Object.keys(tiles)) {
