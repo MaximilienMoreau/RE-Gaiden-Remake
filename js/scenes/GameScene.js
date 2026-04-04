@@ -213,7 +213,6 @@ class GameScene extends Phaser.Scene {
                     this._wallGroup.add(wallRect);
                 }
 
-                // Door tile (code 9) - treated as open floor here, doors handled as objects
             }
         }
     }
@@ -229,7 +228,7 @@ class GameScene extends Phaser.Scene {
             6: 'wall_pipe',
             7: 'obstacle',
             8: 'save_room',
-            9: 'floor_metal',
+            9: 'door_passage',
         };
         return map[code] || 'floor_metal';
     }
@@ -528,6 +527,16 @@ class GameScene extends Phaser.Scene {
             const state = SaveSystem.getState();
             if (def.type === 'weapon' && !state.equippedWeapon) {
                 InventorySystem.equipWeapon(def.id);
+            }
+
+            // Files/notes: open to read immediately upon pickup
+            if (def.type === 'file' && (def.fileContent || def.examineText)) {
+                this._isBusy = true;
+                this._player.lockInput(true);
+                this.scene.launch(CONFIG.SCENES.DIALOGUE, {
+                    singleText: def.fileContent || def.examineText,
+                    callerScene: CONFIG.SCENES.GAME,
+                });
             }
         } else {
             this._showFloatingMessage('Inventory full!', '#ff4444');

@@ -28,10 +28,10 @@ class HUDScene extends Phaser.Scene {
         this._hudPanel.strokeRect(10, H - 80, 200, 70);
 
         // Character name
-        this.add.text(18, H - 75, 'LEON S. KENNEDY', {
+        this.add.text(18, H - 75, 'BARRY BURTON', {
             fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#c8a040', letterSpacing: 3,
         });
-        this.add.text(18, H - 64, 'USSTRATCOM · FIELD AGENT', {
+        this.add.text(18, H - 64, 'BOW SPECIALIST · USSTRATCOM', {
             fontSize: '7px', fontFamily: 'Share Tech Mono', color: '#444440',
         });
 
@@ -79,9 +79,9 @@ class HUDScene extends Phaser.Scene {
             letterSpacing: 3,
         }).setOrigin(1, 0);
 
-        // Controls hint (very faded)
-        this.add.text(W / 2, H - 8, 'WASD/ARROWS — Move  ·  E — Interact  ·  I — Inventory  ·  R — Reload  ·  SHIFT — Run', {
-            fontSize: '7px', fontFamily: 'Share Tech Mono', color: '#222222', letterSpacing: 1,
+        // Controls hint
+        this.add.text(W / 2, H - 8, 'WASD / ARROWS — Déplacer  ·  SHIFT — Courir  ·  E — Interagir / Ramasser  ·  I — Inventaire  ·  R — Recharger', {
+            fontSize: '7px', fontFamily: 'Share Tech Mono', color: '#4a4a4a', letterSpacing: 1,
         }).setOrigin(0.5, 1);
 
         // Danger overlay (flashes red when critical hp)

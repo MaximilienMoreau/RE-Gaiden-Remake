@@ -96,8 +96,8 @@ const MAPS = {
         ],
         connections: {
             north: { tx: 9, ty: 1, targetRoom: 'aft_deck', targetTx: 9, targetTy: 13 },
-            south_west: { tx: 1, ty: 10, targetRoom: 'cabin_101', targetTx: 5, targetTy: 2 },
-            south_east: { tx: 18, ty: 10, targetRoom: 'cabin_102', targetTx: 5, targetTy: 2 },
+            north_west: { tx: 1, ty: 1, targetRoom: 'cabin_101', targetTx: 5, targetTy: 6 },
+            north_east: { tx: 18, ty: 1, targetRoom: 'cabin_102', targetTx: 5, targetTy: 6 },
             south: { tx: 9, ty: 11, targetRoom: 'restaurant_hall', targetTx: 9, targetTy: 1 },
         },
     },
@@ -129,7 +129,7 @@ const MAPS = {
             { type: 'examine', tx: 6, ty: 5, text: 'examine.mirror_cabin' },
         ],
         connections: {
-            north: { tx: 4, ty: 7, targetRoom: 'deck_corridor_a', targetTx: 1, targetTy: 9 },
+            north: { tx: 4, ty: 7, targetRoom: 'deck_corridor_a', targetTx: 1, targetTy: 2 },
         },
     },
 
@@ -159,7 +159,7 @@ const MAPS = {
             { type: 'examine', tx: 7, ty: 2, text: 'examine.overturned_table' },
         ],
         connections: {
-            north: { tx: 4, ty: 7, targetRoom: 'deck_corridor_a', targetTx: 18, targetTy: 9 },
+            north: { tx: 4, ty: 7, targetRoom: 'deck_corridor_a', targetTx: 18, targetTy: 2 },
         },
     },
 
