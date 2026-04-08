@@ -10,6 +10,7 @@ class InventoryScene extends Phaser.Scene {
 
     init(data) {
         this._callerScene = data.callerScene || CONFIG.SCENES.GAME;
+        this._closing = false;
     }
 
     create() {
@@ -39,7 +40,7 @@ class InventoryScene extends Phaser.Scene {
             fontSize: '12px', fontFamily: 'Share Tech Mono', color: '#c8a040', letterSpacing: 6,
         }).setOrigin(0.5);
 
-        this.add.text(panelX + panelW / 2, panelY + 34, 'USSTRATCOM  OPERATIVE: LEON S. KENNEDY', {
+        this.add.text(panelX + panelW / 2, panelY + 34, 'FORMER S.T.A.R.S.  ·  BARRY BURTON', {
             fontSize: '8px', fontFamily: 'Share Tech Mono', color: '#334455', letterSpacing: 3,
         }).setOrigin(0.5);
 
@@ -58,13 +59,25 @@ class InventoryScene extends Phaser.Scene {
         this._buildEquipmentDisplay(panelX, panelY, panelW, panelH);
 
         // Footer
-        this.add.text(panelX + panelW / 2, panelY + panelH - 15, '[ESC] CLOSE  ·  CLICK — SELECT  ·  RIGHT-CLICK — ACTION', {
+        this.add.text(panelX + panelW / 2, panelY + panelH - 15, '[I] / [ESC] CLOSE  ·  CLICK — SELECT  ·  RIGHT-CLICK — ACTION', {
             fontSize: '8px', fontFamily: 'Share Tech Mono', color: '#334455',
         }).setOrigin(0.5);
 
         // Input
+        const closeHandler = () => {
+            if (this._contextMenu) {
+                this._contextMenu.forEach(o => o.destroy());
+                this._contextMenu = null;
+            } else {
+                this._close();
+            }
+        };
+
         this._escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESCAPE);
-        this._escKey.once('down', () => this._close());
+        this._escKey.on('down', closeHandler);
+
+        this._iKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.I);
+        this._iKey.on('down', closeHandler);
 
         this.cameras.main.fadeIn(150, 0, 0, 0);
     }
@@ -358,10 +371,13 @@ class InventoryScene extends Phaser.Scene {
     }
 
     _close() {
+        if (this._closing) return;
+        this._closing = true;
         if (this._contextMenu) {
             this._contextMenu.forEach(o => o.destroy());
             this._contextMenu = null;
         }
+        this.cameras.main.resetFX();
         this.cameras.main.fadeOut(150, 0, 0, 0, (cam, progress) => {
             if (progress === 1) {
                 this.scene.stop();

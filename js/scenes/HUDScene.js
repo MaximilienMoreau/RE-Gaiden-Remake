@@ -14,6 +14,8 @@ class HUDScene extends Phaser.Scene {
         EventSystem.on('weapon_equipped', this._onWeaponEquipped, this);
         EventSystem.on('ammo_changed', this._onAmmoChanged, this);
         EventSystem.on('inventory_changed', this._onInventoryChanged, this);
+        EventSystem.on('combat_start', () => this._setHpPanelVisible(false), this);
+        EventSystem.on('combat_end', () => this._setHpPanelVisible(true), this);
 
         this._buildHUD(W, H);
         this._refreshAll();
@@ -28,10 +30,10 @@ class HUDScene extends Phaser.Scene {
         this._hudPanel.strokeRect(10, H - 80, 200, 70);
 
         // Character name
-        this.add.text(18, H - 75, 'BARRY BURTON', {
+        this._nameText = this.add.text(18, H - 75, 'BARRY BURTON', {
             fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#c8a040', letterSpacing: 3,
         });
-        this.add.text(18, H - 64, 'BOW SPECIALIST · USSTRATCOM', {
+        this._subtitleText = this.add.text(18, H - 64, 'FORMER S.T.A.R.S.  ·  ANTI-UMBRELLA', {
             fontSize: '7px', fontFamily: 'Share Tech Mono', color: '#444440',
         });
 
@@ -177,6 +179,11 @@ class HUDScene extends Phaser.Scene {
         this._actText.setText(labels[act] || '');
     }
 
+    _setHpPanelVisible(visible) {
+        const objs = [this._hudPanel, this._hpBg, this._hpBar, this._hpText, this._statusText, this._nameText, this._subtitleText];
+        objs.forEach(o => o?.setVisible(visible));
+    }
+
     // Event handlers
     _onHpChanged(data) { this._updateHp(data.hp, data.hpMax); }
     _onWeaponEquipped() { this._updateWeapon(); }
@@ -188,6 +195,8 @@ class HUDScene extends Phaser.Scene {
         EventSystem.off('weapon_equipped', this._onWeaponEquipped);
         EventSystem.off('ammo_changed', this._onAmmoChanged);
         EventSystem.off('inventory_changed', this._onInventoryChanged);
+        EventSystem.off('combat_start');
+        EventSystem.off('combat_end');
     }
 }
 
