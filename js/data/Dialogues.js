@@ -241,5 +241,7 @@ const DIALOGUES = {
         umbrella_container_open: 'Container REG-07. Open. The interior restraints are shredded from the inside. Whatever was in here wanted out badly enough.',
         typewriter: 'An old portable typewriter. In this room, with this quiet — you can almost believe you\'re safe. Almost.',
         mirror_cabin: 'Your reflection. Barry looks back at you. You study the face — older than you remember. Tired. Still here.',
+        cabin_103_belongings: 'A woman\'s handbag. Boarding pass, lipstick, a photo of two kids on a beach. Her name on the pass: ELENA VOSS. She never made it off the ship.',
+        cabin_104_barricaded: 'Cabin 104. The door is barricaded from the inside — something heavy piled against it. You can hear labored, rhythmic breathing through the gap. Not human. Not anymore.',
     },
 };

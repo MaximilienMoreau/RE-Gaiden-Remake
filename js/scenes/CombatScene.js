@@ -57,6 +57,7 @@ class CombatScene extends Phaser.Scene {
 
         this.cameras.main.setBackgroundColor(0x000000);
         this.cameras.main.fadeIn(300, 0, 0, 0);
+        EventSystem.emit('combat_start', {});
 
         this._buildBackground(W, H);
         this._buildEnemyDisplay(W, H);
@@ -296,7 +297,7 @@ class CombatScene extends Phaser.Scene {
 
     _buildPlayerStatus(W, H) {
         // Player HP at bottom left
-        this.add.text(20, H * 0.83, 'LEON', {
+        this.add.text(20, H * 0.83, 'BARRY', {
             fontSize: '10px', fontFamily: 'Share Tech Mono', color: '#c8a040', letterSpacing: 3,
         });
 
@@ -707,6 +708,7 @@ class CombatScene extends Phaser.Scene {
             this.cameras.main.fadeOut(500, 0, 0, 0, (cam, progress) => {
                 if (progress === 1) {
                     this.scene.stop();
+                    EventSystem.emit('combat_end', {});
                     EventSystem.emit('combat_finished', {
                         victory,
                         enemyId: this._enemyId,
