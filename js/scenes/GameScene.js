@@ -686,6 +686,7 @@ class GameScene extends Phaser.Scene {
 
     _onOpenInventory() {
         if (this._isBusy) return;
+        if (this.scene.isActive(CONFIG.SCENES.INVENTORY)) return;
         this._isBusy = true;
         this._player?.lockInput(true);
         this.scene.launch(CONFIG.SCENES.INVENTORY, {
@@ -789,6 +790,10 @@ class GameScene extends Phaser.Scene {
     }
 
     _onDialogueClosed(data) {
+        // When inventory closes itself it emits { from: 'inventory' } — always allow that through.
+        // For any other dialogue_closed (e.g., a READ/EXAMINE dialogue that launched from inside
+        // the inventory), skip the reset if the inventory is still open.
+        if (data.from !== 'inventory' && this.scene.isActive(CONFIG.SCENES.INVENTORY)) return;
         this._isBusy = false;
         this._player?.lockInput(false);
     }
