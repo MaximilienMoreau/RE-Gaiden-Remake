@@ -82,8 +82,8 @@ const MAPS = {
             [1,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,1,1],
             [1,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,1,1],
             [1,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,1,1],
-            [1,9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,1],
+            [1,1,1,1,1,1,1,1,1,9,1,1,1,1,1,1,1,1,1,1],
         ],
         objects: [
             { type: 'enemy', tx: 5, ty: 5, enemyId: 'zombie' },
@@ -99,7 +99,7 @@ const MAPS = {
             north: { tx: 9, ty: 1, targetRoom: 'aft_deck', targetTx: 9, targetTy: 13 },
             north_west: { tx: 1, ty: 1, targetRoom: 'cabin_101', targetTx: 5, targetTy: 6 },
             north_east: { tx: 18, ty: 1, targetRoom: 'cabin_102', targetTx: 5, targetTy: 6 },
-            south_west: { tx: 1, ty: 10, targetRoom: 'cabin_103', targetTx: 5, targetTy: 6 },
+            south_west: { tx: 1, ty: 10, targetRoom: 'cabin_103', targetTx: 5, targetTy: 6, locked: true, keyId: 'key_cabin', doorId: 'door_cabin_103' },
             south: { tx: 9, ty: 11, targetRoom: 'restaurant_hall', targetTx: 9, targetTy: 1 },
         },
     },
@@ -239,7 +239,7 @@ const MAPS = {
         ],
         connections: {
             north: { tx: 11, ty: 1, targetRoom: 'deck_corridor_a', targetTx: 9, targetTy: 11 },
-            south: { tx: 11, ty: 17, targetRoom: 'lower_corridor_a', targetTx: 11, targetTy: 1 },
+            south: { tx: 11, ty: 16, targetRoom: 'lower_corridor_a', targetTx: 11, targetTy: 1 },
             east: { tx: 22, ty: 14, targetRoom: 'kitchen', targetTx: 1, targetTy: 5 },
             west: { tx: 4, ty: 14, targetRoom: 'bar', targetTx: 8, targetTy: 5 },
         },
