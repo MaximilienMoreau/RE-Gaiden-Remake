@@ -8,7 +8,7 @@ const DIALOGUES = {
     // =========================================================
     prologue: [
         { speaker: 'SYSTEM', text: 'September 14, 2002.', style: 'system' },
-        { speaker: 'SYSTEM', text: 'Three years after the destruction of Raccoon City.', style: 'system' },
+        { speaker: 'SYSTEM', text: 'Four years after the destruction of Raccoon City.', style: 'system' },
         { speaker: 'SYSTEM', text: 'The United States Strategic Command — USSTRATCOM —\nsent their best field agent to investigate reports\nof a bioterrorism incident aboard a luxury cruise liner.', style: 'system' },
         { speaker: 'SYSTEM', text: 'LEON SCOTT KENNEDY.\nFormer R.P.D. Raccoon City.\nHe boarded the M.S. STARLIGHT six hours ago.', style: 'system' },
         { speaker: 'SYSTEM', text: 'He never reported back.', style: 'red' },
@@ -39,6 +39,13 @@ const DIALOGUES = {
         { speaker: 'LEON', text: 'Then that\'s where we go.', portrait: 'leon' },
         { speaker: 'BARRY', text: 'Together?', portrait: 'barry' },
         { speaker: 'LEON', text: 'You came all this way alone. Yeah, together.', portrait: 'leon' },
+    ],
+
+    // =========================================================
+    // ACT 1 — LEON AS COMPANION (after first meeting)
+    // =========================================================
+    leon_companion: [
+        { speaker: 'LEON', text: 'Keep moving. We need to reach the lower decks before this gets worse.', portrait: 'leon' },
     ],
 
     // =========================================================

@@ -413,7 +413,7 @@ class GameScene extends Phaser.Scene {
             const dist = Phaser.Math.Distance.Between(player.x, player.y, triggerX, triggerY);
 
             if (dist < S * 0.8) {
-                if (conn.locked && !SaveSystem.isDoorOpen(conn.keyId)) {
+                if (conn.locked && !SaveSystem.isDoorOpen(conn.doorId)) {
                     this._showLockedMessage(conn.keyId);
                     return;
                 }
@@ -567,10 +567,26 @@ class GameScene extends Phaser.Scene {
 
     _handleNPCInteract(npc) {
         if (this._isBusy) return;
+
+        if (npc.hasSpoken) {
+            const compId = npc._companionDialogueId;
+            if (compId && DIALOGUES[compId]) {
+                this._isBusy = true;
+                this._player.lockInput(true);
+                this.scene.launch(CONFIG.SCENES.DIALOGUE, {
+                    dialogueId: compId,
+                    npcId: npc.npcId,
+                    callerScene: CONFIG.SCENES.GAME,
+                });
+            }
+            return;
+        }
+
         if (!npc.dialogueId || !DIALOGUES[npc.dialogueId]) return;
 
         this._isBusy = true;
         this._player.lockInput(true);
+        npc.hasSpoken = true;
 
         if (npc._once) {
             SaveSystem.setFlag(`npc_spoken_${npc._roomId}_${npc._objectIdx}`);
@@ -796,6 +812,14 @@ class GameScene extends Phaser.Scene {
         if (data.from !== 'inventory' && this.scene.isActive(CONFIG.SCENES.INVENTORY)) return;
         this._isBusy = false;
         this._player?.lockInput(false);
+
+        if (data.dialogueId === 'act1_leon_first_meeting') {
+            const leon = this._npcs.find(n => n.npcId === 'leon');
+            if (leon) {
+                leon.isFollowing = true;
+                leon._companionDialogueId = 'leon_companion';
+            }
+        }
     }
 
     // =========================================================
@@ -1075,6 +1099,13 @@ class GameScene extends Phaser.Scene {
         for (const enemy of this._enemies) {
             if (enemy && enemy.alive) {
                 enemy.update(time, delta, this._player, this._wallGroup);
+            }
+        }
+
+        // NPC AI (follow + attack)
+        for (const npc of this._npcs) {
+            if (npc && npc.active) {
+                npc.update(time, delta, this._player, this._enemies);
             }
         }
 
