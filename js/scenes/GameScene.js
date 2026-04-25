@@ -414,7 +414,16 @@ class GameScene extends Phaser.Scene {
 
             if (dist < S * 0.8) {
                 if (conn.locked && !SaveSystem.isDoorOpen(conn.doorId)) {
-                    this._showLockedMessage(conn.keyId);
+                    if (conn.keyId && InventorySystem.hasItem(conn.keyId)) {
+                        InventorySystem.removeItem(conn.keyId);
+                        SaveSystem.markDoorOpened(conn.doorId);
+                        const keyDef = ITEMS[conn.keyId?.toUpperCase()] || Object.values(ITEMS).find(i => i.id === conn.keyId);
+                        this._showFloatingMessage(`${keyDef?.name || 'Key'} used.`, '#88cc88');
+                        AudioSynth.sfx('door_open');
+                        this._transitionToRoom(conn.targetRoom, conn.targetTx, conn.targetTy);
+                    } else {
+                        this._showLockedMessage(conn.keyId);
+                    }
                     return;
                 }
                 this._transitionToRoom(conn.targetRoom, conn.targetTx, conn.targetTy);
