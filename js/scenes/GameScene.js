@@ -829,6 +829,15 @@ class GameScene extends Phaser.Scene {
                 leon._companionDialogueId = 'leon_companion';
             }
         }
+
+        if (data.dialogueId === 'act2_lucia_found') {
+            SaveSystem.setFlag(CONFIG.FLAGS.ACT2_LUCIA_LOCATED);
+            const lucia = this._npcs.find(n => n.npcId === 'lucia_first_meeting');
+            if (lucia) {
+                lucia.isFollowing = true;
+                lucia._companionDialogueId = 'lucia_ambient';
+            }
+        }
     }
 
     // =========================================================

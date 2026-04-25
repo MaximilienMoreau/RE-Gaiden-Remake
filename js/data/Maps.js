@@ -344,7 +344,7 @@ const MAPS = {
         tileWidth: 16,
         tileHeight: 12,
         tiles: [
-            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,9,1,1,1,1,1,1,1,1],
             [1,4,4,4,4,4,4,4,4,4,4,4,4,4,4,1],
             [1,4,4,4,4,4,4,4,4,4,4,4,4,4,4,1],
             [1,4,7,7,4,4,4,4,4,4,4,4,7,7,4,1],
@@ -368,8 +368,8 @@ const MAPS = {
             { type: 'npc', tx: 7, ty: 8, npcId: 'lucia_first_meeting', dialogueId: 'act2_lucia_found', once: true },
         ],
         connections: {
-            north: { tx: 7, ty: 1, targetRoom: 'lower_corridor_a', targetTx: 9, targetTy: 7 },
-            south: { tx: 7, ty: 11, targetRoom: 'engine_room', targetTx: 7, targetTy: 1 },
+            north: { tx: 7, ty: 1, targetRoom: 'lower_corridor_a', targetTx: 9, targetTy: 5 },
+            south: { tx: 7, ty: 10, targetRoom: 'engine_room', targetTx: 7, targetTy: 1 },
         },
     },
 
@@ -411,7 +411,7 @@ const MAPS = {
             { type: 'locked_door', tx: 16, ty: 16, doorId: 'engine_cargo_door', keyId: 'key_cargo', targetRoom: 'storage_a' },
         ],
         connections: {
-            north: { tx: 4, ty: 1, targetRoom: 'engine_room_ante', targetTx: 7, targetTy: 11 },
+            north: { tx: 4, ty: 1, targetRoom: 'engine_room_ante', targetTx: 7, targetTy: 8 },
             west: { tx: 4, ty: 16, targetRoom: 'storage_a', targetTx: 8, targetTy: 1 },
             east: { tx: 16, ty: 16, targetRoom: 'storage_b', targetTx: 1, targetTy: 5, locked: true, keyId: 'key_cargo', doorId: 'door_engine_storage_b' },
         },
