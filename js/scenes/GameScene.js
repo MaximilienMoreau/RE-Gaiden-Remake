@@ -893,10 +893,10 @@ class GameScene extends Phaser.Scene {
         const screenY = (this._player.y - camY) * zoom;
 
         this._darknessLayer.clear();
-        this._darknessLayer.fill(0x000000, 0.25);
+        this._darknessLayer.fill(0x000000, 0.13);
 
         // Erase a circle (flashlight)
-        const radius = 200;
+        const radius = 240;
         this._darknessLayer.erase('noise', screenX - radius, screenY - radius, radius * 2, radius * 2);
 
         // Small ambient glow

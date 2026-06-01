@@ -36,15 +36,33 @@ index.html
 
 ## Controls
 
+### Exploration
+
 | Key | Action |
 |---|---|
 | `WASD` / Arrow keys | Move |
 | `SHIFT` | Run |
 | `E` | Interact / Pick up |
-| `I` | Inventory |
+| `I` | Open inventory |
 | `R` | Reload weapon |
 | `SPACE` / `ENTER` | Advance dialogue |
-| `ESC` | Skip dialogue |
+| `ESC` | Skip dialogue / cutscene |
+
+### Combat
+
+Combat triggers automatically when Barry touches an enemy. A reticle oscillates horizontally — press fire at the right moment to hit.
+
+| Key | Action |
+|---|---|
+| `SPACE` / `F` | **Fire pistol** (or dodge if an attack warning is active) |
+| `H` | Use best available heal item (spray > mixed herb > green herb) |
+
+**Hit zones:**
+- Center (green) → **Critical hit** — ×3 damage
+- Near center (yellow) → **Hit** — normal damage
+- Edges (red) → **Miss** — ammo spent, no damage
+
+**No ammo?** Barry automatically uses his **knife** (10 damage, no reticle required).
 
 ---
 
