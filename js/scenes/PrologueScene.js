@@ -183,6 +183,13 @@ class PrologueScene extends Phaser.Scene {
         this._finishPrologue();
     }
 
+    shutdown() {
+        if (this._typeInterval) {
+            clearInterval(this._typeInterval);
+            this._typeInterval = null;
+        }
+    }
+
     _finishPrologue() {
         this.cameras.main.fadeOut(1200, 0, 0, 0, (cam, progress) => {
             if (progress === 1) {

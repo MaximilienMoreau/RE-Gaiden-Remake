@@ -216,4 +216,11 @@ class DialogueScene extends Phaser.Scene {
             }
         });
     }
+
+    shutdown() {
+        if (this._typeInterval) {
+            clearInterval(this._typeInterval);
+            this._typeInterval = null;
+        }
+    }
 }
