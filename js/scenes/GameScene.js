@@ -26,6 +26,10 @@ class GameScene extends Phaser.Scene {
         // Init save state if needed
         if (!SaveSystem.getState()) {
             SaveSystem.newGame();
+            // Barry démarre avec son Colt Python et 2 chargeurs de réserve
+            InventorySystem.addItem('barry_revolver');
+            InventorySystem.addItem('ammo_357', 2);
+            InventorySystem.equipWeapon('barry_revolver');
         }
 
         // Camera settings

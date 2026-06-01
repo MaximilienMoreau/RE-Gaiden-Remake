@@ -382,8 +382,10 @@ class CombatScene extends Phaser.Scene {
             const weapon = InventorySystem.getEquippedWeapon();
             const ammo = weapon?.ammo || this._ammoCount;
             const cap = this._weaponDef?.ammoCapacity || 0;
-            const reserves = InventorySystem.getItemCount(this._weaponDef?.ammoType || '');
-            this._ammoText.setText(`${ammo}/${cap} + ${reserves * (this._weaponDef?.ammoType === 'ammo_12g' ? 6 : 15)}`);
+            const ammoType = this._weaponDef?.ammoType || '';
+            const reserves = InventorySystem.getItemCount(ammoType);
+            const ammoPerBox = ITEMS[ammoType.toUpperCase()]?.amount || 6;
+            this._ammoText.setText(`${ammo}/${cap} + ${reserves * ammoPerBox}`);
             this._ammoText.setColor(ammo <= 2 ? '#ff4444' : '#888870');
         }
     }
@@ -506,8 +508,9 @@ class CombatScene extends Phaser.Scene {
 
     _meleeAttack() {
         const finalDmg = 10;
+        AudioSynth.sfx('combat_hit');
         this._enemyHp -= finalDmg;
-        this._showCombatMessage(`KNIFE! -${finalDmg}`, '#aaffaa');
+        this._showCombatMessage(`COUTEAU! -${finalDmg}`, '#aaffaa');
         this._enemyShakeEffect(true);
         this._updateEnemyHpDisplay();
 

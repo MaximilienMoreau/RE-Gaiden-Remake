@@ -32,7 +32,33 @@ const ITEMS = {
         examineText: 'A Remington 870 pump-action. Found aboard the Starlight. Whatever Barry was carrying, he left this behind. Good thing.',
     },
 
+    BARRY_REVOLVER: {
+        id: 'barry_revolver',
+        name: 'Colt Python .357',
+        desc: 'Le révolver de Barry. Puissant et fiable. Six coups.',
+        type: 'weapon',
+        subtype: 'gun',
+        ammoType: 'ammo_357',
+        ammoCapacity: 6,
+        damage: 45,
+        icon: 'item_barry_revolver',
+        size: [2, 1],
+        stackable: false,
+        examineText: 'Un Colt Python .357 Magnum. Usé par des années de service. "B.B." est gravé sur la crosse. L\'arme de signature de Barry — et elle tire toujours comme au premier jour.',
+    },
+
     // Ammo
+    AMMO_357: {
+        id: 'ammo_357',
+        name: 'Balles .357 Magnum',
+        desc: 'Munitions pour révolver. 6 cartouches par chargeur rapide.',
+        type: 'ammo',
+        amount: 6,
+        icon: 'item_ammo_357',
+        size: [1, 1],
+        stackable: true,
+        maxStack: 5,
+    },
     AMMO_9MM: {
         id: 'ammo_9mm',
         name: '9mm Rounds',
