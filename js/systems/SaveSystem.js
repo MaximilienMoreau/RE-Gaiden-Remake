@@ -57,6 +57,7 @@ const SaveSystem = {
     },
 
     markRoomVisited(roomId) {
+        if (!this._state) return;
         if (!this._state.visitedRooms.includes(roomId)) {
             this._state.visitedRooms.push(roomId);
         }
@@ -67,6 +68,7 @@ const SaveSystem = {
     },
 
     markEnemyDefeated(roomId, enemyIndex) {
+        if (!this._state) return;
         if (!this._state.defeatedEnemies[roomId]) {
             this._state.defeatedEnemies[roomId] = [];
         }
@@ -82,6 +84,7 @@ const SaveSystem = {
     },
 
     markItemCollected(roomId, objectIndex) {
+        if (!this._state) return;
         if (!this._state.collectedItems[roomId]) {
             this._state.collectedItems[roomId] = [];
         }
@@ -97,6 +100,7 @@ const SaveSystem = {
     },
 
     markDoorOpened(doorId) {
+        if (!this._state) return;
         if (!this._state.openedDoors.includes(doorId)) {
             this._state.openedDoors.push(doorId);
         }

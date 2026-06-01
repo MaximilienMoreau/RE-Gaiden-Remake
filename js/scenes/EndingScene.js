@@ -182,6 +182,7 @@ class EndingScene extends Phaser.Scene {
                 charIdx++;
             } else {
                 clearInterval(this._typeInterval);
+                this._typeInterval = null;
                 this._canAdvance = true;
             }
         }, 22);
@@ -311,18 +312,30 @@ class EndingScene extends Phaser.Scene {
     }
 
     update() {
-        if (!this._canAdvance) return;
-
         if (Phaser.Input.Keyboard.JustDown(this._spaceKey) ||
             Phaser.Input.Keyboard.JustDown(this._enterKey)) {
             if (!this._canAdvance) {
-                if (this._typeInterval) clearInterval(this._typeInterval);
+                if (this._typeInterval) {
+                    clearInterval(this._typeInterval);
+                    this._typeInterval = null;
+                }
                 this._mainText.setText(this._lines[this._lineIndex]?.text || '');
                 this._canAdvance = true;
                 return;
             }
             this._lineIndex++;
             this._showLine();
+        }
+    }
+
+    shutdown() {
+        if (this._typeInterval) {
+            clearInterval(this._typeInterval);
+            this._typeInterval = null;
+        }
+        if (this._smokeTimer) {
+            this._smokeTimer.remove();
+            this._smokeTimer = null;
         }
     }
 }
