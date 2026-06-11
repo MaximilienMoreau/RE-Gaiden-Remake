@@ -317,27 +317,29 @@ class TitleScene extends Phaser.Scene {
             saves.push(SaveSystem.getSaveInfo(i));
         }
 
-        // Create a modal overlay for slot selection
         const W = CONFIG.WIDTH, H = CONFIG.HEIGHT;
+        const modalElements = [];
+
         const overlay = this.add.graphics();
         overlay.fillStyle(0x000000, 0.85);
         overlay.fillRect(0, 0, W, H);
+        modalElements.push(overlay);
 
         const panel = this.add.graphics();
         panel.fillStyle(0x0a0a14, 1);
         panel.fillRect(W / 2 - 200, H / 2 - 120, 400, 240);
         panel.lineStyle(1, 0x333, 1);
         panel.strokeRect(W / 2 - 200, H / 2 - 120, 400, 240);
+        modalElements.push(panel);
 
-        this.add.text(W / 2, H / 2 - 100, 'SELECT SAVE FILE', {
+        modalElements.push(this.add.text(W / 2, H / 2 - 100, 'SELECT SAVE FILE', {
             fontSize: '12px', fontFamily: 'Share Tech Mono', color: '#888880', letterSpacing: 4,
-        }).setOrigin(0.5);
+        }).setOrigin(0.5));
 
-        let selectedSlot = -1;
         saves.forEach((save, i) => {
             const yy = H / 2 - 60 + i * 55;
             const color = save.exists ? '#c0b0a0' : '#444';
-            this.add.text(W / 2, yy, save.exists ?
+            const txt = this.add.text(W / 2, yy, save.exists ?
                 `SLOT ${i + 1}  ·  ${save.room}  ·  ${save.formattedDate}` :
                 `SLOT ${i + 1}  ·  [EMPTY]`,
                 { fontSize: '11px', fontFamily: 'Share Tech Mono', color }
@@ -355,18 +357,16 @@ class TitleScene extends Phaser.Scene {
                     });
                 }
             });
+            modalElements.push(txt);
         });
 
-        this.add.text(W / 2, H / 2 + 95, '[ESC] BACK', {
+        modalElements.push(this.add.text(W / 2, H / 2 + 95, '[ESC] BACK', {
             fontSize: '10px', fontFamily: 'Share Tech Mono', color: '#444', letterSpacing: 3,
-        }).setOrigin(0.5);
+        }).setOrigin(0.5));
 
         const escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
         const onEsc = () => {
-            overlay.destroy(); panel.destroy();
-            this.children.getAll().forEach(c => {
-                if (c._loadMenuItem) c.destroy();
-            });
+            modalElements.forEach(e => e.destroy());
             escKey.off('down', onEsc);
             this._canInput = true;
         };
@@ -374,33 +374,34 @@ class TitleScene extends Phaser.Scene {
     }
 
     _showOptions() {
-        // Minimal options - just volume control
         const W = CONFIG.WIDTH, H = CONFIG.HEIGHT;
+        const modalElements = [];
+
         const overlay = this.add.graphics();
         overlay.fillStyle(0x000000, 0.9);
         overlay.fillRect(0, 0, W, H);
+        modalElements.push(overlay);
 
-        this.add.text(W / 2, H / 2 - 80, 'OPTIONS', {
+        modalElements.push(this.add.text(W / 2, H / 2 - 80, 'OPTIONS', {
             fontSize: '14px', fontFamily: 'Share Tech Mono', color: '#888', letterSpacing: 5,
-        }).setOrigin(0.5);
+        }).setOrigin(0.5));
 
-        this.add.text(W / 2, H / 2, 'VOLUME: Use AudioSynth.masterGain.gain.value', {
+        modalElements.push(this.add.text(W / 2, H / 2, 'VOLUME: Use AudioSynth.masterGain.gain.value', {
             fontSize: '10px', fontFamily: 'Share Tech Mono', color: '#555',
-        }).setOrigin(0.5);
+        }).setOrigin(0.5));
 
-        this.add.text(W / 2, H / 2 + 60, 'CONTROLS: WASD/ARROWS — Move\nE — Interact\nI — Inventory\nR — Reload\nSHIFT — Run\nSPACE — Action / Dodge (Combat)', {
+        modalElements.push(this.add.text(W / 2, H / 2 + 60, 'CONTROLS: WASD/ARROWS — Move\nE — Interact\nI — Inventory\nR — Reload\nSHIFT — Run\nSPACE — Action / Dodge (Combat)', {
             fontSize: '10px', fontFamily: 'Share Tech Mono', color: '#666',
             align: 'center',
-        }).setOrigin(0.5);
+        }).setOrigin(0.5));
 
-        this.add.text(W / 2, H / 2 + 140, '[ESC] BACK', {
+        modalElements.push(this.add.text(W / 2, H / 2 + 140, '[ESC] BACK', {
             fontSize: '10px', fontFamily: 'Share Tech Mono', color: '#444',
-        }).setOrigin(0.5);
+        }).setOrigin(0.5));
 
         const escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
         escKey.once('down', () => {
-            overlay.destroy();
-            this.children.getAll().filter(c => c.depth > 0).forEach(c => c.destroy());
+            modalElements.forEach(e => e.destroy());
             this._canInput = true;
         });
     }

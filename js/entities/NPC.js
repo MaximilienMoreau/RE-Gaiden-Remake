@@ -14,6 +14,12 @@ class NPC extends Phaser.GameObjects.Container {
         this.isInteractable = true;
         this.interactRange = CONFIG.TILE_SIZE * 2;
         this.hasSpoken = false;
+        this.isFollowing = false;
+        this._followSpeed = 65;
+        this._attackRange = CONFIG.TILE_SIZE * 1.8;
+        this._attackDamage = 30;
+        this._attackCooldown = 0;
+        this._companionDialogueId = null;
 
         scene.add.existing(this);
         this._buildVisual();
@@ -24,17 +30,27 @@ class NPC extends Phaser.GameObjects.Container {
         const textureKey = this.npcId.includes('barry') ? 'barry' :
                            this.npcId.includes('lucia') ? 'lucia' : 'leon';
 
+        // Shadow (same as player)
+        const shadow = this.scene.add.graphics();
+        shadow.fillStyle(0x000000, 0.3);
+        shadow.fillEllipse(0, 10, 20, 8);
+        this.add(shadow);
+
         if (this.scene.textures.exists(textureKey)) {
             this._sprite = this.scene.add.image(0, 0, textureKey);
             this._sprite.setDisplaySize(24, 36);
             this.add(this._sprite);
         } else {
-            // Fallback colored rectangle
+            // Fallback colored rectangle — same proportions as Barry (22×36)
             const colors = { barry: 0x6a2010, lucia: 0xe0d8d0, leon: 0x1a2040 };
+            const legColors = { barry: 0x3a1a10, lucia: 0xa0a0b0, leon: 0x0a1030 };
             const col = colors[textureKey] || 0x888888;
+            const legCol = legColors[textureKey] || 0x555555;
             const g = this.scene.add.graphics();
             g.fillStyle(col);
-            g.fillRect(-10, -16, 20, 32);
+            g.fillRect(-11, -16, 22, 28);
+            g.fillStyle(legCol);
+            g.fillRect(-9, 12, 18, 8);
             this.add(g);
         }
 
@@ -42,6 +58,7 @@ class NPC extends Phaser.GameObjects.Container {
         const npcNames = {
             barry: 'BARRY',
             barry_ambient: 'BARRY',
+            leon: 'LEON',
             lucia_first_meeting: 'LUCIA',
             lucia_lab: 'LUCIA',
         };
@@ -92,6 +109,33 @@ class NPC extends Phaser.GameObjects.Container {
                 callerScene: CONFIG.SCENES.GAME,
             });
             this.hasSpoken = true;
+        }
+    }
+
+    update(time, delta, player, enemies) {
+        if (!this.isFollowing || !player) return;
+
+        const dt = delta / 1000;
+        const dist = Phaser.Math.Distance.Between(this.x, this.y, player.x, player.y);
+        const minDist = CONFIG.TILE_SIZE * 1.5;
+
+        if (dist > minDist) {
+            const angle = Phaser.Math.Angle.Between(this.x, this.y, player.x, player.y);
+            this.x += Math.cos(angle) * this._followSpeed * dt;
+            this.y += Math.sin(angle) * this._followSpeed * dt;
+        }
+
+        this._attackCooldown -= delta;
+        if (this._attackCooldown <= 0) {
+            for (const enemy of enemies) {
+                if (!enemy || !enemy.alive) continue;
+                const eDist = Phaser.Math.Distance.Between(this.x, this.y, enemy.x, enemy.y);
+                if (eDist < this._attackRange) {
+                    enemy.takeDamage(this._attackDamage);
+                    this._attackCooldown = 1500;
+                    break;
+                }
+            }
         }
     }
 }

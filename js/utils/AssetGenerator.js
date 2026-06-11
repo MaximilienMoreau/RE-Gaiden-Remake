@@ -1666,6 +1666,43 @@ const AssetGenerator = {
                 gfx.fillRect(15, 0, 2, 3);
                 gfx.generateTexture('item_faspray', S, S);
             },
+            item_barry_revolver: () => {
+                gfx.clear();
+                // Canon
+                gfx.fillStyle(0x2a2a2a);
+                gfx.fillRect(14, 13, 16, 5);
+                // Carcasse / poignée
+                gfx.fillStyle(0x3a2a1a);
+                gfx.fillRect(13, 10, 5, 8);
+                gfx.fillRect(14, 18, 4, 10);
+                // Barillet (cercle caractéristique du révolver)
+                gfx.fillStyle(0x484848);
+                gfx.fillCircle(10, 16, 7);
+                gfx.fillStyle(0x1a1a1a);
+                gfx.fillCircle(10, 16, 5);
+                // Alvéoles du barillet
+                gfx.fillStyle(0x080808);
+                gfx.fillCircle(10, 12, 1);
+                gfx.fillCircle(13, 14, 1);
+                gfx.fillCircle(13, 18, 1);
+                gfx.fillCircle(10, 20, 1);
+                gfx.fillCircle(7, 18, 1);
+                gfx.fillCircle(7, 14, 1);
+                gfx.generateTexture('item_barry_revolver', S, S);
+            },
+            item_ammo_357: () => {
+                gfx.clear();
+                // 3 cartouches Magnum (plus grosses que le 9mm)
+                for (let i = 0; i < 3; i++) {
+                    gfx.fillStyle(0x6a4020);
+                    gfx.fillRect(6 + i * 7, 16, 5, 10);
+                    gfx.fillStyle(0x9a6030);
+                    gfx.fillRect(6 + i * 7, 9, 5, 9);
+                    gfx.fillStyle(0xd0a060);
+                    gfx.fillRect(7 + i * 7, 6, 3, 5);
+                }
+                gfx.generateTexture('item_ammo_357', S, S);
+            },
             item_ammo_9mm: () => {
                 gfx.clear();
                 // Box

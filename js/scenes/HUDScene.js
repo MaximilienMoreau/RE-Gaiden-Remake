@@ -14,8 +14,8 @@ class HUDScene extends Phaser.Scene {
         EventSystem.on('weapon_equipped', this._onWeaponEquipped, this);
         EventSystem.on('ammo_changed', this._onAmmoChanged, this);
         EventSystem.on('inventory_changed', this._onInventoryChanged, this);
-        EventSystem.on('combat_start', () => this._setHpPanelVisible(false), this);
-        EventSystem.on('combat_end', () => this._setHpPanelVisible(true), this);
+        EventSystem.on('combat_start', this._onCombatStart, this);
+        EventSystem.on('combat_end', this._onCombatEnd, this);
 
         this._buildHUD(W, H);
         this._refreshAll();
@@ -189,14 +189,17 @@ class HUDScene extends Phaser.Scene {
     _onWeaponEquipped() { this._updateWeapon(); }
     _onAmmoChanged() { this._updateWeapon(); }
     _onInventoryChanged() { this._updateWeapon(); }
+    _onCombatStart() { this._setHpPanelVisible(false); }
+    _onCombatEnd() { this._setHpPanelVisible(true); }
 
-    destroy() {
+    // shutdown() est appelé par scene.stop() — c'est le bon hook Phaser pour le nettoyage
+    shutdown() {
         EventSystem.off('player_hp_changed', this._onHpChanged);
         EventSystem.off('weapon_equipped', this._onWeaponEquipped);
         EventSystem.off('ammo_changed', this._onAmmoChanged);
         EventSystem.off('inventory_changed', this._onInventoryChanged);
-        EventSystem.off('combat_start');
-        EventSystem.off('combat_end');
+        EventSystem.off('combat_start', this._onCombatStart);
+        EventSystem.off('combat_end', this._onCombatEnd);
     }
 }
 

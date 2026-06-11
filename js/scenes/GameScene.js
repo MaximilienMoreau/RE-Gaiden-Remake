@@ -26,6 +26,10 @@ class GameScene extends Phaser.Scene {
         // Init save state if needed
         if (!SaveSystem.getState()) {
             SaveSystem.newGame();
+            // Barry démarre avec son Colt Python et 2 chargeurs de réserve
+            InventorySystem.addItem('barry_revolver');
+            InventorySystem.addItem('ammo_357', 2);
+            InventorySystem.equipWeapon('barry_revolver');
         }
 
         // Camera settings
@@ -426,8 +430,17 @@ class GameScene extends Phaser.Scene {
             const dist = Phaser.Math.Distance.Between(player.x, player.y, triggerX, triggerY);
 
             if (dist < S * 0.8) {
-                if (conn.locked && !SaveSystem.isDoorOpen(conn.keyId)) {
-                    this._showLockedMessage(conn.keyId);
+                if (conn.locked && !SaveSystem.isDoorOpen(conn.doorId)) {
+                    if (conn.keyId && InventorySystem.hasItem(conn.keyId)) {
+                        InventorySystem.removeItem(conn.keyId);
+                        SaveSystem.markDoorOpened(conn.doorId);
+                        const keyDef = ITEMS[conn.keyId?.toUpperCase()] || Object.values(ITEMS).find(i => i.id === conn.keyId);
+                        this._showFloatingMessage(`${keyDef?.name || 'Key'} used.`, '#88cc88');
+                        AudioSynth.sfx('door_open');
+                        this._transitionToRoom(conn.targetRoom, conn.targetTx, conn.targetTy);
+                    } else {
+                        this._showLockedMessage(conn.keyId);
+                    }
                     return;
                 }
                 this._animateDoorAndTransition(dir, conn);
@@ -740,10 +753,26 @@ class GameScene extends Phaser.Scene {
 
     _handleNPCInteract(npc) {
         if (this._isBusy) return;
+
+        if (npc.hasSpoken) {
+            const compId = npc._companionDialogueId;
+            if (compId && DIALOGUES[compId]) {
+                this._isBusy = true;
+                this._player.lockInput(true);
+                this.scene.launch(CONFIG.SCENES.DIALOGUE, {
+                    dialogueId: compId,
+                    npcId: npc.npcId,
+                    callerScene: CONFIG.SCENES.GAME,
+                });
+            }
+            return;
+        }
+
         if (!npc.dialogueId || !DIALOGUES[npc.dialogueId]) return;
 
         this._isBusy = true;
         this._player.lockInput(true);
+        npc.hasSpoken = true;
 
         if (npc._once) {
             SaveSystem.setFlag(`npc_spoken_${npc._roomId}_${npc._objectIdx}`);
@@ -859,6 +888,7 @@ class GameScene extends Phaser.Scene {
 
     _onOpenInventory() {
         if (this._isBusy) return;
+        if (this.scene.isActive(CONFIG.SCENES.INVENTORY)) return;
         this._isBusy = true;
         this._player?.lockInput(true);
         this.scene.launch(CONFIG.SCENES.INVENTORY, {
@@ -962,8 +992,29 @@ class GameScene extends Phaser.Scene {
     }
 
     _onDialogueClosed(data) {
+        // When inventory closes itself it emits { from: 'inventory' } — always allow that through.
+        // For any other dialogue_closed (e.g., a READ/EXAMINE dialogue that launched from inside
+        // the inventory), skip the reset if the inventory is still open.
+        if (data.from !== 'inventory' && this.scene.isActive(CONFIG.SCENES.INVENTORY)) return;
         this._isBusy = false;
         this._player?.lockInput(false);
+
+        if (data.dialogueId === 'act1_leon_first_meeting') {
+            const leon = this._npcs.find(n => n.npcId === 'leon');
+            if (leon) {
+                leon.isFollowing = true;
+                leon._companionDialogueId = 'leon_companion';
+            }
+        }
+
+        if (data.dialogueId === 'act2_lucia_found') {
+            SaveSystem.setFlag(CONFIG.FLAGS.ACT2_LUCIA_LOCATED);
+            const lucia = this._npcs.find(n => n.npcId === 'lucia_first_meeting');
+            if (lucia) {
+                lucia.isFollowing = true;
+                lucia._companionDialogueId = 'lucia_ambient';
+            }
+        }
     }
 
     // =========================================================
@@ -1019,10 +1070,10 @@ class GameScene extends Phaser.Scene {
         const screenY = (this._player.y - camY) * zoom;
 
         this._darknessLayer.clear();
-        this._darknessLayer.fill(0x000000, 0.25);
+        this._darknessLayer.fill(0x000000, 0.13);
 
         // Erase a circle (flashlight)
-        const radius = 200;
+        const radius = 240;
         this._darknessLayer.erase('noise', screenX - radius, screenY - radius, radius * 2, radius * 2);
 
         // Small ambient glow
@@ -1243,6 +1294,13 @@ class GameScene extends Phaser.Scene {
         for (const enemy of this._enemies) {
             if (enemy && enemy.alive) {
                 enemy.update(time, delta, this._player, this._wallGroup);
+            }
+        }
+
+        // NPC AI (follow + attack)
+        for (const npc of this._npcs) {
+            if (npc && npc.active) {
+                npc.update(time, delta, this._player, this._enemies);
             }
         }
 

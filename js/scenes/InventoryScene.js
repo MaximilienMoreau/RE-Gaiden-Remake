@@ -59,7 +59,7 @@ class InventoryScene extends Phaser.Scene {
         this._buildEquipmentDisplay(panelX, panelY, panelW, panelH);
 
         // Footer
-        this.add.text(panelX + panelW / 2, panelY + panelH - 15, '[I] / [ESC] CLOSE  ·  CLICK — SELECT  ·  RIGHT-CLICK — ACTION', {
+        this.add.text(panelX + panelW / 2, panelY + panelH - 15, '[I] / [ESC] CLOSE  ·  CLICK — SELECT & ACT  ·  RIGHT-CLICK — MENU', {
             fontSize: '8px', fontFamily: 'Share Tech Mono', color: '#334455',
         }).setOrigin(0.5);
 
@@ -145,6 +145,10 @@ class InventoryScene extends Phaser.Scene {
                     slotBg.fillRect(sx, sy, SLOT_SIZE, SLOT_SIZE);
                     slotBg.lineStyle(1, isSelected ? 0x6699cc : 0x1e2f40, 1);
                     slotBg.strokeRect(sx, sy, SLOT_SIZE, SLOT_SIZE);
+                    // Restore selected slot info when hovering away
+                    if (!isSelected && this._selectedSlot >= 0 && this._selectedSlot < inventory.length) {
+                        this._showItemDetail(inventory[this._selectedSlot]);
+                    }
                 });
             }
         }
@@ -172,7 +176,7 @@ class InventoryScene extends Phaser.Scene {
 
         // Qty
         if (invItem.qty > 1) {
-            slot.qty = this.add.text(slot.sx + SLOT_SIZE - 4, slot.sy + 4, `x${invItem.qty}`, {
+            slot.qty = this.add.text(slot.sx + 44, slot.sy + 4, `x${invItem.qty}`, {
                 fontSize: '8px', fontFamily: 'Share Tech Mono', color: '#aaaaaa',
             }).setOrigin(1, 0);
         }
@@ -275,9 +279,122 @@ class InventoryScene extends Phaser.Scene {
     _selectSlot(idx) {
         this._selectedSlot = idx;
         const inventory = InventorySystem.getInventory();
+        this._clearActionButtons();
         if (idx < inventory.length) {
             this._showItemDetail(inventory[idx]);
+            this._showActionButtons(inventory[idx]);
         }
+    }
+
+    _clearActionButtons() {
+        if (this._actionButtonObjs) {
+            this._actionButtonObjs.forEach(o => o.destroy());
+            this._actionButtonObjs = null;
+        }
+    }
+
+    _showActionButtons(invItem) {
+        if (!invItem) return;
+        const def = ITEMS[invItem.id?.toUpperCase()] || Object.values(ITEMS).find(i => i.id === invItem.id);
+        if (!def) return;
+
+        const actions = [];
+
+        if (def.type === 'weapon') {
+            actions.push({ label: 'EQUIP', color: '#88ccff', fn: () => {
+                InventorySystem.equipWeapon(def.id);
+                this._close();
+            }});
+        }
+        if (def.type === 'heal' && def.healAmount > 0) {
+            actions.push({ label: 'USE', color: '#88ff99', fn: () => {
+                InventorySystem.useHealItem(def.id);
+                AudioSynth.sfx('herb_use');
+                this._close();
+            }});
+        }
+        if (def.type === 'file') {
+            actions.push({ label: 'READ', color: '#ffdd88', fn: () => {
+                this.scene.launch(CONFIG.SCENES.DIALOGUE, {
+                    singleText: def.fileContent || def.examineText || def.desc,
+                    callerScene: CONFIG.SCENES.INVENTORY,
+                });
+            }});
+        }
+        if (def.combinable && def.combinable.length > 0) {
+            const partner = def.combinable.find(pid => InventorySystem.hasItem(pid));
+            if (partner) {
+                actions.push({ label: 'COMBINE', color: '#ffaa55', fn: () => {
+                    InventorySystem.combineItems(def.id, partner);
+                    AudioSynth.sfx('item_pickup');
+                    this._close();
+                }});
+            }
+        }
+        if (def.examineText) {
+            actions.push({ label: 'EXAMINE', color: '#aaaaaa', fn: () => {
+                this.scene.launch(CONFIG.SCENES.DIALOGUE, {
+                    singleText: def.examineText,
+                    callerScene: CONFIG.SCENES.INVENTORY,
+                });
+            }});
+        }
+        actions.push({ label: 'DISCARD', color: '#cc6666', fn: () => {
+            InventorySystem.removeItem(def.id);
+            this._close();
+        }});
+
+        const bX = this._detailX + 8;
+        const bW = this._detailW - 16;
+        const bH = 17;
+        const bGap = 3;
+        const startY = this._detailY + 143;
+        const objs = [];
+
+        // Separator line
+        const sep = this.add.graphics();
+        sep.lineStyle(1, 0x223344, 0.7);
+        sep.beginPath();
+        sep.moveTo(bX, startY - 5);
+        sep.lineTo(bX + bW, startY - 5);
+        sep.strokePath();
+        objs.push(sep);
+
+        actions.forEach((action, i) => {
+            const y = startY + i * (bH + bGap);
+
+            const bg = this.add.graphics().setDepth(5);
+            bg.fillStyle(0x0c1824, 1);
+            bg.fillRect(bX, y, bW, bH);
+            bg.lineStyle(1, 0x1e3040, 1);
+            bg.strokeRect(bX, y, bW, bH);
+
+            const btn = this.add.text(bX + bW / 2, y + bH / 2, action.label, {
+                fontSize: '9px', fontFamily: 'Share Tech Mono', color: action.color,
+            }).setOrigin(0.5).setDepth(6).setInteractive({ useHandCursor: true });
+
+            btn.on('pointerover', () => {
+                bg.clear();
+                bg.fillStyle(0x1a3050, 1);
+                bg.fillRect(bX, y, bW, bH);
+                bg.lineStyle(1, 0x4488bb, 1);
+                bg.strokeRect(bX, y, bW, bH);
+                btn.setColor('#ffffff');
+            });
+            btn.on('pointerout', () => {
+                bg.clear();
+                bg.fillStyle(0x0c1824, 1);
+                bg.fillRect(bX, y, bW, bH);
+                bg.lineStyle(1, 0x1e3040, 1);
+                bg.strokeRect(bX, y, bW, bH);
+                btn.setColor(action.color);
+            });
+            btn.on('pointerdown', () => action.fn());
+
+            objs.push(bg, btn);
+        });
+
+        this._actionButtonObjs = objs;
     }
 
     _showContextMenu(idx, sx, sy) {

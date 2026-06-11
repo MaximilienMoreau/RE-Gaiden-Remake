@@ -11,7 +11,11 @@ const EventSystem = {
 
     off(event, handler) {
         if (!this._handlers[event]) return;
-        this._handlers[event] = this._handlers[event].filter(h => h.handler !== handler);
+        if (handler === undefined) {
+            this._handlers[event] = [];
+        } else {
+            this._handlers[event] = this._handlers[event].filter(h => h.handler !== handler);
+        }
     },
 
     emit(event, data = {}) {

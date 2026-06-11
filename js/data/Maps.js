@@ -59,7 +59,7 @@ const MAPS = {
             { type: 'trigger', tx: 10, ty: 1, eventId: 'prologue_arrived', once: true },
         ],
         connections: {
-            south: { tx: 9, ty: 13, targetRoom: 'deck_corridor_a', targetTx: 9, targetTy: 1 },
+            south: { tx: 9, ty: 13, targetRoom: 'deck_corridor_a', targetTx: 9, targetTy: 5 },
         },
         cutsceneOnEnter: null,
     },
@@ -82,8 +82,8 @@ const MAPS = {
             [1,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,1,1],
             [1,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,1,1],
             [1,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,1,1],
-            [1,9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,1],
+            [1,1,1,1,1,1,1,1,1,9,1,1,1,1,1,1,1,1,1,1],
         ],
         objects: [
             { type: 'enemy', tx: 5, ty: 5, enemyId: 'zombie' },
@@ -96,10 +96,10 @@ const MAPS = {
             { type: 'note', tx: 9, ty: 5, noteId: 'note_leon' },
         ],
         connections: {
-            north: { tx: 9, ty: 1, targetRoom: 'aft_deck', targetTx: 9, targetTy: 13 },
+            north: { tx: 9, ty: 1, targetRoom: 'aft_deck', targetTx: 9, targetTy: 11 },
             north_west: { tx: 1, ty: 1, targetRoom: 'cabin_101', targetTx: 5, targetTy: 6 },
             north_east: { tx: 18, ty: 1, targetRoom: 'cabin_102', targetTx: 5, targetTy: 6 },
-            south_west: { tx: 1, ty: 10, targetRoom: 'cabin_103', targetTx: 5, targetTy: 6 },
+            south_west: { tx: 1, ty: 10, targetRoom: 'cabin_103', targetTx: 5, targetTy: 6, locked: true, keyId: 'key_cabin', doorId: 'door_cabin_103' },
             south: { tx: 9, ty: 11, targetRoom: 'restaurant_hall', targetTx: 9, targetTy: 1 },
         },
     },
@@ -239,7 +239,7 @@ const MAPS = {
         ],
         connections: {
             north: { tx: 11, ty: 1, targetRoom: 'deck_corridor_a', targetTx: 9, targetTy: 11 },
-            south: { tx: 11, ty: 17, targetRoom: 'lower_corridor_a', targetTx: 11, targetTy: 1 },
+            south: { tx: 11, ty: 16, targetRoom: 'lower_corridor_a', targetTx: 11, targetTy: 1 },
             east: { tx: 22, ty: 14, targetRoom: 'kitchen', targetTx: 1, targetTy: 5 },
             west: { tx: 4, ty: 14, targetRoom: 'bar', targetTx: 8, targetTy: 5 },
         },
@@ -344,7 +344,7 @@ const MAPS = {
         tileWidth: 16,
         tileHeight: 12,
         tiles: [
-            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,9,1,1,1,1,1,1,1,1],
             [1,4,4,4,4,4,4,4,4,4,4,4,4,4,4,1],
             [1,4,4,4,4,4,4,4,4,4,4,4,4,4,4,1],
             [1,4,7,7,4,4,4,4,4,4,4,4,7,7,4,1],
@@ -368,8 +368,8 @@ const MAPS = {
             { type: 'npc', tx: 7, ty: 8, npcId: 'lucia_first_meeting', dialogueId: 'act2_lucia_found', once: true },
         ],
         connections: {
-            north: { tx: 7, ty: 1, targetRoom: 'lower_corridor_a', targetTx: 9, targetTy: 7 },
-            south: { tx: 7, ty: 11, targetRoom: 'engine_room', targetTx: 7, targetTy: 1 },
+            north: { tx: 7, ty: 1, targetRoom: 'lower_corridor_a', targetTx: 9, targetTy: 5 },
+            south: { tx: 7, ty: 10, targetRoom: 'engine_room', targetTx: 7, targetTy: 1 },
         },
     },
 
@@ -411,9 +411,9 @@ const MAPS = {
             { type: 'locked_door', tx: 16, ty: 16, doorId: 'engine_cargo_door', keyId: 'key_cargo', targetRoom: 'storage_a' },
         ],
         connections: {
-            north: { tx: 4, ty: 1, targetRoom: 'engine_room_ante', targetTx: 7, targetTy: 11 },
+            north: { tx: 4, ty: 1, targetRoom: 'engine_room_ante', targetTx: 7, targetTy: 8 },
             west: { tx: 4, ty: 16, targetRoom: 'storage_a', targetTx: 8, targetTy: 1 },
-            east: { tx: 16, ty: 16, targetRoom: 'storage_b', targetTx: 1, targetTy: 5, locked: true, keyId: 'key_cargo' },
+            east: { tx: 16, ty: 16, targetRoom: 'storage_b', targetTx: 1, targetTy: 5, locked: true, keyId: 'key_cargo', doorId: 'door_engine_storage_b' },
         },
     },
 
@@ -448,7 +448,7 @@ const MAPS = {
         ],
         connections: {
             north: { tx: 8, ty: 1, targetRoom: 'engine_room', targetTx: 4, targetTy: 16 },
-            south_east: { tx: 12, ty: 8, targetRoom: 'lab_corridor', targetTx: 1, targetTy: 5, locked: true, keyId: 'key_lab' },
+            south_east: { tx: 12, ty: 8, targetRoom: 'lab_corridor', targetTx: 1, targetTy: 5, locked: true, keyId: 'key_lab', doorId: 'door_storage_a_lab' },
         },
     },
 
@@ -549,7 +549,7 @@ const MAPS = {
         ],
         connections: {
             north: { tx: 8, ty: 1, targetRoom: 'lab_corridor', targetTx: 8, targetTy: 7 },
-            south: { tx: 3, ty: 14, targetRoom: 'cargo_hold', targetTx: 5, targetTy: 1, locked: true, keyId: 'key_cargo' },
+            south: { tx: 3, ty: 14, targetRoom: 'cargo_hold', targetTx: 5, targetTy: 1, locked: true, keyId: 'key_cargo', doorId: 'door_lab_cargo' },
             south_east: { tx: 16, ty: 14, targetRoom: 'cargo_hold', targetTx: 14, targetTy: 1 },
         },
     },
