@@ -106,6 +106,9 @@ class GameScene extends Phaser.Scene {
         // Place objects (items, doors, NPCs, enemies, etc.)
         this._placeObjects(roomDef);
 
+        // Spawn animated door visuals at every connection point
+        this._spawnConnectionDoors(roomDef);
+
         // Spawn player
         const spawnTx = entryTx ?? this._getDefaultSpawn(roomDef).tx;
         const spawnTy = entryTy ?? this._getDefaultSpawn(roomDef).ty;
@@ -185,12 +188,22 @@ class GameScene extends Phaser.Scene {
         // Walls group for physics
         this._wallGroup = this.physics.add.staticGroup();
 
+        // Connection tiles must never have wall collision so the player can walk through them
+        const connPositions = new Set();
+        if (roomDef.connections) {
+            for (const conn of Object.values(roomDef.connections)) {
+                connPositions.add(`${conn.tx},${conn.ty}`);
+            }
+        }
+
         for (let ty = 0; ty < H; ty++) {
             for (let tx = 0; tx < W; tx++) {
                 const tileCode = tiles[ty][tx];
                 const px = tx * S;
                 const py = ty * S;
-                const textureKey = this._getTileTexture(tileCode);
+                // At connection positions, always render a door passage tile visually
+                const isConnPos = connPositions.has(`${tx},${ty}`);
+                const textureKey = this._getTileTexture(isConnPos ? 9 : tileCode);
                 let img;
 
                 if (this.textures.exists(textureKey)) {
@@ -207,9 +220,9 @@ class GameScene extends Phaser.Scene {
                 img.setDepth(-1);
                 this._tileLayers.push(img);
 
-                // Wall collision
+                // Wall collision — skip connection positions so the player can pass through
                 const isWall = [1, 3, 6, 7].includes(tileCode);
-                if (isWall) {
+                if (isWall && !isConnPos) {
                     const wallRect = this.add.rectangle(
                         px + S / 2, py + S / 2, S, S, 0x000000, 0
                     );
@@ -430,7 +443,7 @@ class GameScene extends Phaser.Scene {
                     }
                     return;
                 }
-                this._transitionToRoom(conn.targetRoom, conn.targetTx, conn.targetTy);
+                this._animateDoorAndTransition(dir, conn);
                 return;
             }
         }
@@ -467,6 +480,166 @@ class GameScene extends Phaser.Scene {
             }
         });
     }
+
+    // =========================================================
+    // DOOR VISUALS & ANIMATION
+    // =========================================================
+    _spawnConnectionDoors(roomDef) {
+        this._connectionDoors = {};
+        if (!roomDef?.connections) return;
+        const S = CONFIG.TILE_SIZE;
+
+        for (const [dir, conn] of Object.entries(roomDef.connections)) {
+            const cx = conn.tx * S + S / 2;
+            const cy = conn.ty * S + S / 2;
+
+            // Container anchored at tile centre
+            const container = this.add.container(cx, cy);
+            container.setDepth(5);
+
+            // Left sliding panel
+            const leftPanel = this.add.graphics();
+            leftPanel.fillStyle(0x1a2230);
+            leftPanel.fillRect(-S / 2, -S / 2, S / 2, S);
+            leftPanel.fillStyle(0x2a3a50);
+            leftPanel.fillRect(-S / 2 + 1, -S / 2 + 1, S / 2 - 2, S - 2);
+            leftPanel.fillStyle(0x3a5065, 0.5);
+            leftPanel.fillRect(-S / 2 + 1, -S / 2 + 1, S / 2 - 2, 2);
+            leftPanel.lineStyle(1, 0x354a62, 0.7);
+            leftPanel.beginPath();
+            leftPanel.moveTo(-S / 2 + 1, -S / 2 + S * 0.3);
+            leftPanel.lineTo(-2, -S / 2 + S * 0.3);
+            leftPanel.strokePath();
+            leftPanel.beginPath();
+            leftPanel.moveTo(-S / 2 + 1, -S / 2 + S * 0.7);
+            leftPanel.lineTo(-2, -S / 2 + S * 0.7);
+            leftPanel.strokePath();
+
+            // Right sliding panel
+            const rightPanel = this.add.graphics();
+            rightPanel.fillStyle(0x1a2230);
+            rightPanel.fillRect(0, -S / 2, S / 2, S);
+            rightPanel.fillStyle(0x243245);
+            rightPanel.fillRect(1, -S / 2 + 1, S / 2 - 2, S - 2);
+            rightPanel.fillStyle(0x3a5065, 0.45);
+            rightPanel.fillRect(1, -S / 2 + 1, S / 2 - 2, 2);
+            rightPanel.lineStyle(1, 0x354a62, 0.7);
+            rightPanel.beginPath();
+            rightPanel.moveTo(2, -S / 2 + S * 0.3);
+            rightPanel.lineTo(S / 2 - 1, -S / 2 + S * 0.3);
+            rightPanel.strokePath();
+            rightPanel.beginPath();
+            rightPanel.moveTo(2, -S / 2 + S * 0.7);
+            rightPanel.lineTo(S / 2 - 1, -S / 2 + S * 0.7);
+            rightPanel.strokePath();
+
+            // Static elements: centre seam + frame + green status light
+            const frame = this.add.graphics();
+            frame.fillStyle(0x080c14);
+            frame.fillRect(-1, -S / 2, 2, S);
+            frame.fillStyle(0x00cc66);
+            frame.fillRect(-S / 2 + 3, S / 2 - 4, S - 6, 2);
+            frame.lineStyle(2, 0x3a5070, 1);
+            frame.strokeRect(-S / 2, -S / 2, S, S);
+
+            container.add([leftPanel, rightPanel, frame]);
+            this._tileLayers.push(container);
+
+            this._connectionDoors[dir] = { container, leftPanel, rightPanel, conn };
+        }
+    },
+
+    _animateDoorAndTransition(dir, conn) {
+        if (this._isBusy) return;
+        this._isBusy = true;
+
+        const S = CONFIG.TILE_SIZE;
+        const doorData = this._connectionDoors?.[dir];
+
+        AudioSynth.sfx('door_open');
+
+        const doTransition = () => {
+            this.cameras.main.fadeOut(400, 0, 0, 0, (cam, progress) => {
+                if (progress === 1) {
+                    this._cutsceneTriggers = [];
+                    this._bossTriggers = [];
+                    this._loadRoom(conn.targetRoom, conn.targetTx, conn.targetTy);
+                    this.cameras.main.fadeIn(400, 0, 0, 0, (_, p2) => {
+                        if (p2 === 1) {
+                            this._animateDoorClose();
+                            this._transitionCooldown = this.time.now + 800;
+                            this._isBusy = false;
+                        }
+                    });
+                }
+            });
+        };
+
+        if (!doorData) {
+            doTransition();
+            return;
+        }
+
+        const { leftPanel, rightPanel } = doorData;
+
+        // Slide panels apart to reveal the passage
+        this.tweens.add({
+            targets: leftPanel,
+            x: -S / 2,
+            duration: 260,
+            ease: 'Cubic.easeIn',
+        });
+        this.tweens.add({
+            targets: rightPanel,
+            x: S / 2,
+            duration: 260,
+            ease: 'Cubic.easeIn',
+            onComplete: doTransition,
+        });
+    },
+
+    _animateDoorClose() {
+        if (!this._player || !this._connectionDoors) return;
+        const S = CONFIG.TILE_SIZE;
+
+        // Find the door closest to the player (entry point of the new room)
+        let closestDir = null;
+        let closestDist = Infinity;
+        for (const [dir, data] of Object.entries(this._connectionDoors)) {
+            const dist = Phaser.Math.Distance.Between(
+                this._player.x, this._player.y,
+                data.container.x, data.container.y
+            );
+            if (dist < closestDist) {
+                closestDist = dist;
+                closestDir = dir;
+            }
+        }
+
+        if (!closestDir || closestDist > S * 3) return;
+
+        const { leftPanel, rightPanel } = this._connectionDoors[closestDir];
+
+        // Start panels in open position (player just walked through)
+        leftPanel.x = -S / 2;
+        rightPanel.x = S / 2;
+
+        // Slam shut with a slight bounce
+        this.tweens.add({
+            targets: leftPanel,
+            x: 0,
+            duration: 280,
+            ease: 'Back.easeOut',
+            delay: 80,
+        });
+        this.tweens.add({
+            targets: rightPanel,
+            x: 0,
+            duration: 280,
+            ease: 'Back.easeOut',
+            delay: 80,
+        });
+    },
 
     // =========================================================
     // INTERACTIONS
