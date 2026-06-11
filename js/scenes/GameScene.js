@@ -534,7 +534,7 @@ class GameScene extends Phaser.Scene {
 
             this._connectionDoors[dir] = { container, leftPanel, rightPanel, conn };
         }
-    },
+    }
 
     _animateDoorAndTransition(dir, conn) {
         if (this._isBusy) return;
@@ -583,7 +583,7 @@ class GameScene extends Phaser.Scene {
             ease: 'Cubic.easeIn',
             onComplete: doTransition,
         });
-    },
+    }
 
     _animateDoorClose() {
         if (!this._player || !this._connectionDoors) return;
@@ -626,7 +626,7 @@ class GameScene extends Phaser.Scene {
             ease: 'Back.easeOut',
             delay: 80,
         });
-    },
+    }
 
     // =========================================================
     // INTERACTIONS
