@@ -1,4 +1,4 @@
-# Resident Evil Gaiden — Remake
+# Resident Evil Gaiden Remake
 
 A fan-made remake of the 2001 Game Boy Color game *Resident Evil Gaiden*, built in Phaser 3 with vanilla JavaScript. No build tools, no external assets — everything is generated in code.
 
@@ -14,12 +14,12 @@ A fan-made remake of the 2001 Game Boy Color game *Resident Evil Gaiden*, built 
 | B.O.W. creature | **GENESIS-01 / "The Creature"** — Umbrella adaptive mimicry project |
 | Barry Burton (S.T.A.R.S.) | Barry: former S.T.A.R.S., now **Anti-Umbrella clandestine operative** |
 
-### Story — 4 Acts
+### Story with 4 Acts
 
 - **Act 1 — Arrival**: Barry arrives aboard the Starlight during a full outbreak. Meets Leon.
 - **Act 2 — The Search**: Find Lucia. Fight through the restaurant, engine room, and cargo hold.
 - **Act 3 — The Lab**: Discover Umbrella's hidden laboratory. Uncover The Creature's origin.
-- **Act 4 — Two Leons**: The creature can copy people. Barry must identify the real Leon. Final boss.
+- **Act 4 — Two Leons**: The Creature can copy people. Barry must identify the real Leon. Final boss.
 
 ---
 
@@ -42,7 +42,7 @@ index.html
 |---|---|
 | `WASD` / Arrow keys | Move |
 | `SHIFT` | Run |
-| `E` | Interact / Pick up |
+| `E` | Interact / Pick up item / Talk to NPC |
 | `I` | Open inventory |
 | `R` | Reload weapon |
 | `SPACE` / `ENTER` | Advance dialogue |
@@ -50,11 +50,11 @@ index.html
 
 ### Combat
 
-Combat triggers automatically when Barry touches an enemy. A reticle oscillates horizontally — press fire at the right moment to hit.
+Combat triggers automatically when Barry gets close to an enemy. A targeting reticle oscillates horizontally — time your shot for maximum damage.
 
 | Key | Action |
 |---|---|
-| `SPACE` / `F` | **Fire pistol** (or dodge if an attack warning is active) |
+| `SPACE` / `F` | **Fire** (or **Dodge** if an attack warning is flashing) |
 | `H` | Use best available heal item (spray > mixed herb > green herb) |
 
 **Hit zones:**
@@ -63,6 +63,41 @@ Combat triggers automatically when Barry touches an enemy. A reticle oscillates 
 - Edges (red) → **Miss** — ammo spent, no damage
 
 **No ammo?** Barry automatically uses his **knife** (10 damage, no reticle required).
+
+**Enemy attacks:** When the enemy flashes an attack warning, press `SPACE` / `F` within the dodge window to avoid all damage instead of firing.
+
+### Inventory
+
+| Action | How |
+|---|---|
+| Select item | Left-click a slot |
+| Context menu | Right-click a slot |
+| Use / Equip / Read | Click action button on the right panel |
+| Combine herbs | Select one herb — a **COMBINE** button appears if the partner is in inventory |
+| Close | `I` or `ESC` |
+
+---
+
+## Weapons & Ammo
+
+Each ammo item in the inventory represents a **box** of rounds. The amount of rounds per box depends on the calibre:
+
+| Ammo | Rounds per box | Weapon |
+|---|---|---|
+| `.357 Magnum` | 6 | Colt Python (Barry's revolver) |
+| `9mm Rounds` | 15 | Handgun (SIG P226) |
+| `12-Gauge Shells` | 6 | Remington M870 Shotgun |
+
+When you equip a weapon or reload (`R`), rounds are automatically drawn from the ammo box(es) in your inventory to fill the chamber.
+
+---
+
+## Saving
+
+- Interact with a **typewriter** (green glow) to open the save menu.
+- 3 save slots are available.
+- The game displays the room name and date for each slot.
+- In-game hint: `[E]` on a typewriter → select a slot → saved.
 
 ---
 
@@ -74,7 +109,7 @@ Combat triggers automatically when Barry touches an enemy. A reticle oscillates 
 | **Language** | Vanilla JavaScript (no build tools) |
 | **Graphics** | Procedurally generated via Phaser Graphics API |
 | **Audio** | Web Audio API — synthesized music & SFX, no audio files |
-| **Save system** | `localStorage` |
+| **Save system** | `localStorage` (3 slots) |
 
 ---
 
@@ -100,25 +135,25 @@ js/
 ├── systems/
 │   ├── EventSystem.js         — Global event bus (emit/on/off)
 │   ├── SaveSystem.js          — Save/load via localStorage, flags, door states
-│   └── InventorySystem.js     — Item management, weapon equip, combining
+│   └── InventorySystem.js     — Item management, weapon equip, reload, combining
 │
 ├── entities/
 │   ├── Player.js              — Barry Burton: movement, input, flashlight, physics
 │   ├── Enemy.js               — Enemy AI: patrol, aggro, combat trigger
-│   ├── NPC.js                 — NPCs: dialogue, companion follow behavior
+│   ├── NPC.js                 — NPCs: dialogue, companion follow & wall collision
 │   └── Interactable.js        — Items, doors, save points, examine objects
 │
 └── scenes/
     ├── BootScene.js           — Asset generation on startup
-    ├── TitleScene.js          — Main menu
+    ├── TitleScene.js          — Main menu (new game, load, options)
     ├── PrologueScene.js       — Opening cinematic text
-    ├── GameScene.js           — Main exploration (room loading, transitions, triggers)
-    ├── HUDScene.js            — Overlay HUD (HP, weapon, status)
-    ├── CombatScene.js         — Turn-based combat with oscillating reticle
+    ├── GameScene.js           — Main exploration (rooms, transitions, triggers, HUD)
+    ├── HUDScene.js            — Overlay HUD (HP, weapon, ammo, act indicator)
+    ├── CombatScene.js         — Reticle-based combat with dodge window
     ├── DialogueScene.js       — Dialogue/cutscene overlay with typewriter effect
-    ├── InventoryScene.js      — Inventory grid, item actions (use, equip, read, combine)
-    ├── GameOverScene.js       — Death screen
-    └── EndingScene.js         — Ending sequence
+    ├── InventoryScene.js      — Inventory grid (use, equip, read, combine, discard)
+    ├── GameOverScene.js       — Death screen with continue/title options
+    └── EndingScene.js         — Ending cinematic, epilogue, credits
 ```
 
 ---
@@ -147,7 +182,7 @@ js/
 
 ## Music
 
-All BGM is synthesized procedurally. Each track is a function in `AudioSynth.js`:
+All BGM is synthesized procedurally. Each track is a method in `AudioSynth.js`:
 
 | Type key | Used in | Style |
 |---|---|---|
@@ -166,13 +201,16 @@ Each room's BGM is set via the `bgm:` property in `Maps.js`.
 ## Adding Content
 
 ### New room
-Add an entry to `MAPS` in `Maps.js` with `tiles`, `objects`, and `connections`. Connect it from another room via its `connections` object.
+Add an entry to `MAPS` in `Maps.js` with `tiles`, `objects`, and `connections`. Connect it from another room via its `connections` object. Tile code `9` at a connection point renders the door passage automatically.
 
 ### New item
-Add an entry to `ITEMS` in `Items.js`. Supported types: `weapon`, `heal`, `key`, `file`, `ammo`.
+Add an entry to `ITEMS` in `Items.js`. Supported types: `weapon`, `heal`, `key`, `file`, `ammo`. For ammo, set `amount` to the number of bullets per inventory unit — this is used by the reload and equip logic.
+
+### New enemy
+Add an entry to `ENEMIES` in `Enemies.js`. Set `combat.reticleSpeed` to control difficulty (higher = faster reticle), `attackDamage` and `attackRate` for the enemy's counter-attack rhythm.
 
 ### New dialogue
-Add an entry to `DIALOGUES` in `Dialogues.js` as an array of `{ speaker, text, style? }` objects.
+Add an entry to `DIALOGUES` in `Dialogues.js` as an array of `{ speaker, text, style? }` objects. Supported styles: `system`, `highlight`, `red`, `dim`, `action`, `examine`.
 
 ### New BGM track
-Add a `_bgmMyTrack()` method to `AudioSynth`, register it in `playBgm()`, then use the key name in a room's `bgm:` field.
+Add a `_bgmMyTrack()` method to `AudioSynth`, register it in `playBgm()`, then reference the key name in a room's `bgm:` field.

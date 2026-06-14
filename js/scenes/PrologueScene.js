@@ -6,7 +6,7 @@ class PrologueScene extends Phaser.Scene {
         super(CONFIG.SCENES.PROLOGUE);
         this._lineIndex = 0;
         this._canAdvance = false;
-        this._typeTimer = null;
+        this._typeInterval = null;
         this._lines = [];
     }
 

@@ -22,6 +22,10 @@ class NPC extends Phaser.GameObjects.Container {
         this._companionDialogueId = null;
 
         scene.add.existing(this);
+        scene.physics.add.existing(this);
+        this.body.setCollideWorldBounds(true);
+        this.body.setSize(18, 24);
+        this.body.setOffset(-9, -8);
         this._buildVisual();
         this._startIdleAnimation();
     }
@@ -113,16 +117,22 @@ class NPC extends Phaser.GameObjects.Container {
     }
 
     update(time, delta, player, enemies) {
-        if (!this.isFollowing || !player) return;
+        if (!this.isFollowing || !player) {
+            if (this.body) this.body.setVelocity(0, 0);
+            return;
+        }
 
-        const dt = delta / 1000;
         const dist = Phaser.Math.Distance.Between(this.x, this.y, player.x, player.y);
         const minDist = CONFIG.TILE_SIZE * 1.5;
 
         if (dist > minDist) {
             const angle = Phaser.Math.Angle.Between(this.x, this.y, player.x, player.y);
-            this.x += Math.cos(angle) * this._followSpeed * dt;
-            this.y += Math.sin(angle) * this._followSpeed * dt;
+            this.body.setVelocity(
+                Math.cos(angle) * this._followSpeed,
+                Math.sin(angle) * this._followSpeed
+            );
+        } else {
+            this.body.setVelocity(0, 0);
         }
 
         this._attackCooldown -= delta;

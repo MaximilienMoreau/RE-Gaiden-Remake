@@ -147,15 +147,18 @@ class Enemy extends Phaser.GameObjects.Container {
                 yoyo: true,
             });
         }
-        // Show "!" indicator
-        const alert = this.scene.add.text(this.x, this.y - 30, '!', {
+        // "!" parented to the container so it follows the enemy as it moves.
+        const alert = this.scene.add.text(0, -45, '!', {
             fontSize: '16px',
             fontFamily: 'Share Tech Mono',
             color: '#ff4400',
             stroke: '#000',
             strokeThickness: 3,
         }).setOrigin(0.5);
-        this.scene.time.delayedCall(600, () => alert.destroy());
+        this.add(alert);
+        this.scene.time.delayedCall(600, () => {
+            if (alert.active) this.remove(alert, true);
+        });
     }
 
     _triggerCombat() {

@@ -48,9 +48,9 @@ class GameOverScene extends Phaser.Scene {
 
         // Quote
         const quotes = [
-            '"Every survivor carries the dead with them." — L.K.',
-            '"I\'ve died a hundred times. I keep getting back up." — L.K.',
-            '"Raccoon City took everything. I refuse to let this take the rest." — L.K.',
+            '"Every survivor carries the dead with them." — B.B.',
+            '"I\'ve come back from worse. Get up." — B.B.',
+            '"Raccoon City took everything. I refuse to let this take the rest." — B.B.',
         ];
         const quote = quotes[Math.floor(Math.random() * quotes.length)];
         this.add.text(W / 2, H / 2 + 60, quote, {
