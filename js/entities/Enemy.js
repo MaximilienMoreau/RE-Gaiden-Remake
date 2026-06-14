@@ -188,18 +188,20 @@ class Enemy extends Phaser.GameObjects.Container {
     }
 
     die() {
+        if (!this.alive) return; // Prevent double-die (e.g. companion kill + combat end)
         this.alive = false;
         this._state = 'dead';
-        this.body.setVelocity(0, 0);
+        if (this.body) this.body.setVelocity(0, 0);
 
         // Death animation
+        if (!this.scene) return;
         this.scene.tweens.add({
             targets: this,
             alpha: 0,
             y: this.y + 8,
             duration: 600,
             onComplete: () => {
-                // Leave blood pool
+                if (!this.scene) return;
                 if (this.scene.textures.exists('blood_pool')) {
                     const pool = this.scene.add.image(this.x, this.y, 'blood_pool');
                     pool.setDepth(0);

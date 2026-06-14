@@ -32,6 +32,19 @@ const ITEMS = {
         examineText: 'A Remington 870 pump-action. Found aboard the Starlight. Whatever Barry was carrying, he left this behind. Good thing.',
     },
 
+    KNIFE: {
+        id: 'knife',
+        name: 'Couteau de combat',
+        desc: 'Couteau tactique de Barry. Corps à corps uniquement.',
+        type: 'weapon',
+        subtype: 'melee',
+        damage: 10,
+        icon: 'item_knife',
+        size: [1, 1],
+        stackable: false,
+        examineText: 'Un couteau tactique militaire. Lame courte, acier inoxydable. Efficace uniquement à bout portant. Dernier recours quand les munitions manquent.',
+    },
+
     BARRY_REVOLVER: {
         id: 'barry_revolver',
         name: 'Colt Python .357',

@@ -220,11 +220,6 @@ class InventoryScene extends Phaser.Scene {
             fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#888880',
             wordWrap: { width: detailW - 16 }, lineSpacing: 4,
         });
-        this._detailExamine = this.add.text(detailX + 8, detailY + 130, '', {
-            fontSize: '8px', fontFamily: 'Share Tech Mono', color: '#556677',
-            wordWrap: { width: detailW - 16 }, lineSpacing: 3,
-            fontStyle: 'italic',
-        });
     }
 
     _buildEquipmentDisplay(panelX, panelY, panelW, panelH) {
@@ -242,8 +237,10 @@ class InventoryScene extends Phaser.Scene {
         });
 
         if (weapon) {
-            this.add.text(detailX, eqY + 35, `AMMO: ${weapon.ammo} / ${weapon.def?.ammoCapacity || 0}`, {
-                fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#556677',
+            const isMelee = weapon.def?.subtype === 'melee';
+            const ammoLabel = isMelee ? 'CORPS À CORPS' : `AMMO: ${weapon.ammo} / ${weapon.def?.ammoCapacity || 0}`;
+            this.add.text(detailX, eqY + 35, ammoLabel, {
+                fontSize: '9px', fontFamily: 'Share Tech Mono', color: isMelee ? '#aaffaa' : '#556677',
             });
         }
 
@@ -273,7 +270,6 @@ class InventoryScene extends Phaser.Scene {
         if (this._detailName) this._detailName.setText(def.name);
         if (this._detailType) this._detailType.setText(def.type?.toUpperCase() || '');
         if (this._detailDesc) this._detailDesc.setText(def.desc || '');
-        if (this._detailExamine) this._detailExamine.setText(def.examineText || '');
     }
 
     _selectSlot(idx) {
@@ -348,7 +344,7 @@ class InventoryScene extends Phaser.Scene {
         const bW = this._detailW - 16;
         const bH = 17;
         const bGap = 3;
-        const startY = this._detailY + 143;
+        const startY = this._detailY + 105;
         const objs = [];
 
         // Separator line
