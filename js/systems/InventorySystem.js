@@ -75,14 +75,18 @@ const InventorySystem = {
         if (!def || def.type !== 'weapon') return false;
 
         state.equippedWeapon = itemId;
-        // Load ammo
+        // Load ammo — convert boxes → bullets using the ammo item's amount field.
         const ammoDef = this._getDef(def.ammoType);
         if (ammoDef) {
-            const ammoInInv = this.getItemCount(def.ammoType);
-            const toLoad = Math.min(ammoInInv, def.ammoCapacity - (state.equippedWeaponAmmo || 0));
+            const bulletsPerBox = ammoDef.amount || 1;
+            const availableBoxes = this.getItemCount(def.ammoType);
+            const availableBullets = availableBoxes * bulletsPerBox;
+            const chambered = state.equippedWeaponAmmo || 0;
+            const toLoad = Math.min(availableBullets, def.ammoCapacity - chambered);
             if (toLoad > 0) {
-                this.removeItem(def.ammoType, toLoad);
-                state.equippedWeaponAmmo = (state.equippedWeaponAmmo || 0) + toLoad;
+                const boxesToRemove = Math.min(availableBoxes, Math.ceil(toLoad / bulletsPerBox));
+                this.removeItem(def.ammoType, boxesToRemove);
+                state.equippedWeaponAmmo = chambered + toLoad;
             }
         }
         EventSystem.emit('weapon_equipped', { itemId, ammo: state.equippedWeaponAmmo });
@@ -115,11 +119,15 @@ const InventorySystem = {
         if (!def || !def.ammoType) return false;
         const needed = def.ammoCapacity - state.equippedWeaponAmmo;
         if (needed <= 0) return false;
-        const available = this.getItemCount(def.ammoType);
-        if (available <= 0) return false;
-        const load = Math.min(needed, available);
-        this.removeItem(def.ammoType, load);
-        state.equippedWeaponAmmo += load;
+        const availableBoxes = this.getItemCount(def.ammoType);
+        if (availableBoxes <= 0) return false;
+        // Convert boxes → bullets so we load the correct number of rounds.
+        const ammoDef = this._getDef(def.ammoType);
+        const bulletsPerBox = ammoDef?.amount || 1;
+        const bulletsToLoad = Math.min(needed, availableBoxes * bulletsPerBox);
+        const boxesToUse = Math.min(availableBoxes, Math.ceil(bulletsToLoad / bulletsPerBox));
+        this.removeItem(def.ammoType, boxesToUse);
+        state.equippedWeaponAmmo += bulletsToLoad;
         EventSystem.emit('ammo_changed', { ammo: state.equippedWeaponAmmo });
         return true;
     },
@@ -163,9 +171,9 @@ const InventorySystem = {
         const state = SaveSystem.getState();
         if (!state) return false;
         if (!this.hasItem(itemId)) return false;
+        // Prevent depositing the equipped weapon while it has ammo loaded in the chamber.
+        if (state.equippedWeapon === itemId && state.equippedWeaponAmmo > 0) return false;
         this.removeItem(itemId);
-        const def = this._getDef(itemId);
-        // Don't allow depositing equipped weapon ammo that's loaded
         state.itemBox.push({ id: itemId, qty: 1 });
         return true;
     },

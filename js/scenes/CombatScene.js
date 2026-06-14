@@ -464,7 +464,7 @@ class CombatScene extends Phaser.Scene {
 
         if (hitType === 'miss') {
             AudioSynth.sfx('combat_miss');
-            const sfxName = weapon.def?.subtype === 'gun' ? 'gunshot_pistol' : 'gunshot_pistol';
+            const sfxName = weapon.id === 'shotgun' ? 'gunshot_shotgun' : 'gunshot_pistol';
             AudioSynth.sfx(sfxName);
             this._showCombatMessage('MISS!', '#888888');
             this._enemyShakeEffect(false);
@@ -583,7 +583,10 @@ class CombatScene extends Phaser.Scene {
                 onComplete: () => {
                     this._enemySprite.setTexture(newDef.sprite);
                     this._enemySprite.setDisplaySize(srcW * scale, srcH * scale);
-                    this.tweens.add({ targets: this._enemySprite, scaleX: 1, duration: 300 });
+                    // Read the scaleX set by setDisplaySize so the tween targets the right value.
+                    const targetScaleX = this._enemySprite.scaleX;
+                    this._enemySprite.scaleX = 0;
+                    this.tweens.add({ targets: this._enemySprite, scaleX: targetScaleX, duration: 300 });
                 },
             });
         }
@@ -739,10 +742,12 @@ class CombatScene extends Phaser.Scene {
             if (InventorySystem.hasItem(itemId)) {
                 InventorySystem.useHealItem(itemId);
                 const amount = ITEMS[itemId.toUpperCase()]?.healAmount || 0;
+                const hpBefore = this._playerHp;
                 this._playerHp = Math.min(this._playerHpMax, this._playerHp + amount);
+                const actualHeal = this._playerHp - hpBefore;
                 this._updatePlayerHpDisplay();
                 AudioSynth.sfx('herb_use');
-                this._showCombatMessage(`HEALED +${Math.min(amount, this._playerHpMax)}`, '#44cc88');
+                this._showCombatMessage(`HEALED +${actualHeal}`, '#44cc88');
                 return true;
             }
         }

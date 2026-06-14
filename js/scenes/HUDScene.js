@@ -151,18 +151,20 @@ class HUDScene extends Phaser.Scene {
             return;
         }
 
+        const W = CONFIG.WIDTH;
+        const H = CONFIG.HEIGHT;
         this._weaponNameText.setText(weapon.def?.name || weapon.id);
         const ammo = weapon.ammo;
         const cap = weapon.def?.ammoCapacity || 0;
         const reserveId = weapon.def?.ammoType;
         const reserves = reserveId ? InventorySystem.getItemCount(reserveId) : 0;
-        const reserveAmmo = reserves * (reserveId === 'ammo_12g' ? 6 : 15);
+        const ammoDef = reserveId ? (ITEMS[reserveId.toUpperCase()] || Object.values(ITEMS).find(i => i.id === reserveId)) : null;
+        const reserveAmmo = reserves * (ammoDef?.amount || 1);
 
         this._ammoText.setText(`${ammo}/${cap}  +${reserveAmmo}`);
         this._ammoText.setColor(ammo <= 2 ? '#ff4444' : '#888870');
 
         // Ammo bar
-        const W = CONFIG.WIDTH;
         this._ammoBar.clear();
         const pct = cap > 0 ? ammo / cap : 0;
         this._ammoBar.fillStyle(pct > 0.33 ? 0x4488cc : 0xff6622, 0.8);
@@ -202,32 +204,3 @@ class HUDScene extends Phaser.Scene {
         EventSystem.off('combat_end', this._onCombatEnd);
     }
 }
-
-// Patch missing H reference in _updateWeapon
-const _origUpdateWeapon = HUDScene.prototype._updateWeapon;
-HUDScene.prototype._updateWeapon = function() {
-    const weapon = InventorySystem.getEquippedWeapon();
-    if (!weapon) {
-        if (this._weaponNameText) this._weaponNameText.setText('— NO WEAPON —');
-        if (this._ammoText) this._ammoText.setText('');
-        if (this._ammoBar) this._ammoBar.clear();
-        return;
-    }
-    const H = CONFIG.HEIGHT, W = CONFIG.WIDTH;
-    if (this._weaponNameText) this._weaponNameText.setText(weapon.def?.name || weapon.id);
-    const ammo = weapon.ammo;
-    const cap = weapon.def?.ammoCapacity || 0;
-    const reserveId = weapon.def?.ammoType;
-    const reserves = reserveId ? InventorySystem.getItemCount(reserveId) : 0;
-    const reserveAmmo = reserves * (reserveId === 'ammo_12g' ? 6 : 15);
-    if (this._ammoText) {
-        this._ammoText.setText(`${ammo}/${cap}  +${reserveAmmo}`);
-        this._ammoText.setColor(ammo <= 2 ? '#ff4444' : '#888870');
-    }
-    if (this._ammoBar) {
-        this._ammoBar.clear();
-        const pct = cap > 0 ? ammo / cap : 0;
-        this._ammoBar.fillStyle(pct > 0.33 ? 0x4488cc : 0xff6622, 0.8);
-        this._ammoBar.fillRect(W - 162, H - 36, Math.floor(140 * pct), 6);
-    }
-};

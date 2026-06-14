@@ -19,7 +19,7 @@ const SaveSystem = {
                 hpMax: CONFIG.PLAYER.HEALTH_MAX,
                 currentRoom: 'aft_deck',
                 position: { tx: 10, ty: 6 },
-                character: 'leon',
+                character: 'barry',
             },
             // Inventory
             inventory: [],

@@ -17,7 +17,6 @@ class GameScene extends Phaser.Scene {
     init(data) {
         this._startRoomId = data?.roomId || 'aft_deck';
         this._fromSave = data?.fromSave || false;
-        this._fromPrologue = data?.fromPrologue || false;
     }
 
     create() {
@@ -356,6 +355,9 @@ class GameScene extends Phaser.Scene {
                         npc._roomId = roomDef.id;
                         npc._once = obj.once;
                         this._npcs.push(npc);
+                        if (this._wallGroup) {
+                            this.physics.add.collider(npc, this._wallGroup);
+                        }
                     }
                     break;
                 }
@@ -816,6 +818,16 @@ class GameScene extends Phaser.Scene {
         const uiRefs = [overlay, panel, header];
         const slotTexts = [];
 
+        // Declare escKey early so close() can reference it for cleanup.
+        const escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+
+        const close = () => {
+            this.input.keyboard.removeKey(escKey);
+            uiRefs.forEach(r => r.destroy());
+            this._isBusy = false;
+            this._player?.lockInput(false);
+        };
+
         for (let i = 0; i < CONFIG.SAVE_SLOT_COUNT; i++) {
             const info = SaveSystem.getSaveInfo(i);
             const yy = H / 2 - 10 + i * 48;
@@ -853,13 +865,6 @@ class GameScene extends Phaser.Scene {
         }).setOrigin(0.5).setScrollFactor(0).setDepth(102);
         uiRefs.push(closeText);
 
-        const close = () => {
-            uiRefs.forEach(r => r.destroy());
-            this._isBusy = false;
-            this._player?.lockInput(false);
-        };
-
-        const escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
         escKey.once('down', close);
     }
 
@@ -954,6 +959,8 @@ class GameScene extends Phaser.Scene {
                     if (InventorySystem.addItem(drop)) {
                         const def = ITEMS[drop.toUpperCase()] || Object.values(ITEMS).find(i => i.id === drop);
                         this._showFloatingMessage(`+ ${def?.name || drop}`, '#ffcc44');
+                    } else {
+                        this._showFloatingMessage('Inventaire plein — objet perdu !', '#ff4444');
                     }
                 });
             }
