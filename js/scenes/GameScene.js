@@ -26,7 +26,8 @@ class GameScene extends Phaser.Scene {
         // Init save state if needed
         if (!SaveSystem.getState()) {
             SaveSystem.newGame();
-            // Barry démarre avec son Colt Python et 2 chargeurs de réserve
+            // Barry démarre avec son Colt Python, son couteau et 2 chargeurs de réserve
+            InventorySystem.addItem('knife');
             InventorySystem.addItem('barry_revolver');
             InventorySystem.addItem('ammo_357', 2);
             InventorySystem.equipWeapon('barry_revolver');
@@ -460,6 +461,16 @@ class GameScene extends Phaser.Scene {
         const player = this._player;
         const S = CONFIG.TILE_SIZE;
 
+        // Release the entry-lock once the player has physically stepped away from where they spawned
+        if (this._entryLockPos) {
+            const dEntry = Phaser.Math.Distance.Between(player.x, player.y, this._entryLockPos.x, this._entryLockPos.y);
+            if (dEntry > S * 1.5) {
+                this._entryLockPos = null;
+            } else {
+                return; // Still on spawn tile — don't trigger any door
+            }
+        }
+
         for (const [dir, conn] of Object.entries(roomDef.connections)) {
             const triggerX = conn.tx * S + S / 2;
             const triggerY = conn.ty * S + S / 2;
@@ -509,7 +520,9 @@ class GameScene extends Phaser.Scene {
                 this._loadRoom(roomId, targetTx, targetTy);
                 this.cameras.main.fadeIn(500, 0, 0, 0, (_, progress2) => {
                     if (progress2 === 1) {
+                        const S = CONFIG.TILE_SIZE;
                         this._transitionCooldown = this.time.now + 800;
+                        this._entryLockPos = { x: targetTx * S + S / 2, y: targetTy * S + S / 2 };
                         this._isBusy = false;
                     }
                 });
@@ -603,7 +616,9 @@ class GameScene extends Phaser.Scene {
                     this.cameras.main.fadeIn(400, 0, 0, 0, (_, p2) => {
                         if (p2 === 1) {
                             this._animateDoorClose();
+                            const S = CONFIG.TILE_SIZE;
                             this._transitionCooldown = this.time.now + 800;
+                            this._entryLockPos = { x: conn.targetTx * S + S / 2, y: conn.targetTy * S + S / 2 };
                             this._isBusy = false;
                         }
                     });
@@ -745,10 +760,14 @@ class GameScene extends Phaser.Scene {
             EventSystem.emit('inventory_changed', {});
             obj.destroy();
 
-            // Auto-equip first weapon
+            // Auto-equip first weapon; hint for switching when one is already equipped
             const state = SaveSystem.getState();
             if (def.type === 'weapon' && !state.equippedWeapon) {
                 InventorySystem.equipWeapon(def.id);
+            } else if (def.type === 'weapon' && state.equippedWeapon && state.equippedWeapon !== def.id) {
+                this.time.delayedCall(700, () => {
+                    this._showFloatingMessage('[I] pour changer d\'arme', '#88ccff');
+                });
             }
 
             // Files/notes: open to read immediately upon pickup
@@ -970,49 +989,58 @@ class GameScene extends Phaser.Scene {
                 enemyId: data.enemyId,
                 enemyIndex: data.enemyIndex,
                 roomId: data.roomId,
+                isBoss: data.isBoss || false,
                 callerScene: CONFIG.SCENES.GAME,
             });
         });
     }
 
     _onCombatFinished(data) {
-        if (data.victory) {
-            // Remove the defeated enemy from the world
-            const enemy = this._enemies.find(
-                e => e && e.enemyIndex === data.enemyIndex && e.roomId === data.roomId
-            );
-            if (enemy) {
-                enemy.die();
-                const idx = this._enemies.indexOf(enemy);
-                if (idx !== -1) this._enemies.splice(idx, 1);
-            }
+        let isFinalBossVictory = false;
 
-            // Drop loot
-            if (data.drops) {
-                data.drops.forEach(drop => {
-                    if (InventorySystem.addItem(drop)) {
-                        const def = ITEMS[drop.toUpperCase()] || Object.values(ITEMS).find(i => i.id === drop);
-                        this._showFloatingMessage(`+ ${def?.name || drop}`, '#ffcc44');
-                    } else {
-                        this._showFloatingMessage('Inventaire plein — objet perdu !', '#ff4444');
+        try {
+            if (data.victory) {
+                // Remove the defeated enemy from the world
+                const enemy = this._enemies.find(
+                    e => e && e.enemyIndex === data.enemyIndex && e.roomId === data.roomId
+                );
+                if (enemy) {
+                    if (enemy.alive) enemy.die(); // Guard against already-dead (companion kill)
+                    const idx = this._enemies.indexOf(enemy);
+                    if (idx !== -1) this._enemies.splice(idx, 1);
+                }
+
+                // Drop loot
+                if (data.drops) {
+                    data.drops.forEach(drop => {
+                        if (InventorySystem.addItem(drop)) {
+                            const def = ITEMS[drop.toUpperCase()] || Object.values(ITEMS).find(i => i.id === drop);
+                            this._showFloatingMessage(`+ ${def?.name || drop}`, '#ffcc44');
+                        } else {
+                            this._showFloatingMessage('Inventaire plein — objet perdu !', '#ff4444');
+                        }
+                    });
+                }
+
+                // Check boss kill
+                if (data.isBoss) {
+                    SaveSystem.setFlag(`boss_defeated_${data.enemyId}`);
+                    if (data.enemyId === 'creature_p2') {
+                        isFinalBossVictory = true;
+                        this.time.delayedCall(1500, () => this._triggerCutscene('act4_lucia_saves_leon'));
                     }
-                });
-            }
-
-            // Check boss kill
-            if (data.isBoss) {
-                SaveSystem.setFlag(`boss_defeated_${data.enemyId}`);
-                if (data.enemyId === 'creature_p2') {
-                    // Trigger epilogue cutscene then end
-                    this.time.delayedCall(1500, () => this._triggerCutscene('act4_lucia_saves_leon'));
-                    return;
                 }
             }
+        } catch (err) {
+            console.error('[_onCombatFinished] Error:', err);
         }
 
-        this._isBusy = false;
-        this._player?.lockInput(false);
-        AudioSynth.playBgm(MAPS[this._currentRoomId]?.bgm || 'exploration');
+        // Always unblock unless we're handing off to the final-boss epilogue cutscene
+        if (!isFinalBossVictory) {
+            this._isBusy = false;
+            this._player?.lockInput(false);
+            AudioSynth.playBgm(MAPS[this._currentRoomId]?.bgm || 'exploration');
+        }
     }
 
     _onEnemyKilled(data) {
@@ -1090,6 +1118,7 @@ class GameScene extends Phaser.Scene {
     // =========================================================
     _triggerCutscene(cutsceneId) {
         if (!DIALOGUES[cutsceneId]) return;
+        if (this._isBusy) return; // Don't launch dialogue if combat/transition already running
         this._isBusy = true;
         this._player?.lockInput(true);
 

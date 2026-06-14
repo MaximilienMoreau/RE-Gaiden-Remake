@@ -50,6 +50,7 @@ class CombatScene extends Phaser.Scene {
         const weapon = InventorySystem.getEquippedWeapon();
         this._weaponDef = weapon?.def || null;
         this._ammoCount = weapon?.ammo || 0;
+        this._isMelee = this._weaponDef?.subtype === 'melee';
     }
 
     create() {
@@ -379,6 +380,11 @@ class CombatScene extends Phaser.Scene {
 
     _updateAmmoDisplay() {
         if (this._ammoText) {
+            if (this._isMelee) {
+                this._ammoText.setText('CORPS À CORPS');
+                this._ammoText.setColor('#aaffaa');
+                return;
+            }
             const weapon = InventorySystem.getEquippedWeapon();
             const ammo = weapon?.ammo || this._ammoCount;
             const cap = this._weaponDef?.ammoCapacity || 0;
@@ -422,6 +428,14 @@ class CombatScene extends Phaser.Scene {
 
     _fireWeapon() {
         if (this._finished || this._turnPhase !== 'player') return;
+
+        // Melee weapon — skip reticle and ammo entirely
+        if (this._isMelee) {
+            this._meleeAttack();
+            this._totalTurns++;
+            this._nextAttackAt = this.time.now + this._attackInterval + Math.random() * 1000;
+            return;
+        }
 
         // Check ammo
         const weapon = InventorySystem.getEquippedWeapon();
@@ -507,7 +521,8 @@ class CombatScene extends Phaser.Scene {
     }
 
     _meleeAttack() {
-        const finalDmg = 10;
+        const knifeDef = ITEMS['KNIFE'] || Object.values(ITEMS).find(i => i.id === 'knife');
+        const finalDmg = this._isMelee ? (this._weaponDef?.damage || 10) : (knifeDef?.damage || 10);
         AudioSynth.sfx('combat_hit');
         this._enemyHp -= finalDmg;
         this._showCombatMessage(`COUTEAU! -${finalDmg}`, '#aaffaa');
@@ -515,8 +530,14 @@ class CombatScene extends Phaser.Scene {
         this._updateEnemyHpDisplay();
 
         if (this._enemyHp <= 0) {
-            this._victory = true;
-            this.time.delayedCall(800, () => this._endCombat(true));
+            const def = this._enemyDef;
+            if (def?.combat?.phases > 1 && this._phase === 1 && def?.combat?.nextPhase) {
+                this._transitionToPhase2();
+            } else {
+                this._enemyHp = 0;
+                this._victory = true;
+                this.time.delayedCall(800, () => this._endCombat(true));
+            }
         }
     }
 

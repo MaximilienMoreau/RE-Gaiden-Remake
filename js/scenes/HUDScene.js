@@ -155,6 +155,14 @@ class HUDScene extends Phaser.Scene {
         const W = CONFIG.WIDTH;
         const H = CONFIG.HEIGHT;
         this._weaponNameText.setText(weapon.def?.name || weapon.id);
+
+        if (weapon.def?.subtype === 'melee') {
+            this._ammoText.setText('CORPS À CORPS');
+            this._ammoText.setColor('#aaffaa');
+            this._ammoBar.clear();
+            return;
+        }
+
         const ammo = weapon.ammo;
         const cap = weapon.def?.ammoCapacity || 0;
         const reserveId = weapon.def?.ammoType;

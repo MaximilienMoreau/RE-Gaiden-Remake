@@ -1666,6 +1666,26 @@ const AssetGenerator = {
                 gfx.fillRect(15, 0, 2, 3);
                 gfx.generateTexture('item_faspray', S, S);
             },
+            item_knife: () => {
+                gfx.clear();
+                // Handle
+                gfx.fillStyle(0x3a2a1a);
+                gfx.fillRect(4, 18, 10, 6);
+                gfx.fillStyle(0x5a3a22);
+                gfx.fillRect(5, 19, 8, 4);
+                // Guard
+                gfx.fillStyle(0x606060);
+                gfx.fillRect(13, 17, 3, 8);
+                // Blade
+                gfx.fillStyle(0xa0a0a0);
+                gfx.fillRect(16, 19, 10, 4);
+                gfx.fillStyle(0xc0c0c0);
+                gfx.fillRect(16, 19, 10, 2);
+                // Tip
+                gfx.fillStyle(0xc8c8c8);
+                gfx.fillTriangle(26, 19, 26, 23, 31, 21);
+                gfx.generateTexture('item_knife', S, S);
+            },
             item_barry_revolver: () => {
                 gfx.clear();
                 // Canon
