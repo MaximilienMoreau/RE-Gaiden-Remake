@@ -424,7 +424,7 @@ const AssetGenerator = {
         const gfx = this.scene.make.graphics({ x: 0, y: 0, add: false });
 
         this._drawLeon(gfx, W, H);
-        gfx.generateTexture('leon', W * 4, H * 4);
+        gfx.generateTexture('leon', W, H);
         gfx.clear();
 
         this._drawLeon(gfx, W, H, true);

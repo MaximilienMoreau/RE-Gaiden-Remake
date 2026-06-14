@@ -127,6 +127,7 @@ const MAPS = {
             { type: 'player_start', tx: 5, ty: 5 },
             { type: 'save_point', tx: 9, ty: 3 },
             { type: 'item_box', tx: 3, ty: 3 },
+            { type: 'item', tx: 8, ty: 5, itemId: 'ammo_357' },
             { type: 'examine', tx: 9, ty: 4, text: 'examine.typewriter' },
             { type: 'examine', tx: 6, ty: 5, text: 'examine.mirror_cabin' },
         ],
@@ -155,7 +156,8 @@ const MAPS = {
         ],
         objects: [
             { type: 'enemy', tx: 6, ty: 4, enemyId: 'zombie' },
-            { type: 'item', tx: 9, ty: 5, itemId: 'ammo_9mm' },
+            { type: 'item', tx: 9, ty: 5, itemId: 'handgun' },
+            { type: 'item', tx: 10, ty: 5, itemId: 'ammo_9mm' },
             { type: 'item', tx: 2, ty: 5, itemId: 'herb_green' },
             { type: 'item', tx: 5, ty: 2, itemId: 'key_cabin' },
             { type: 'file', tx: 7, ty: 2, fileId: 'diary_passenger' },
@@ -188,6 +190,7 @@ const MAPS = {
             { type: 'enemy', tx: 7, ty: 5, enemyId: 'zombie' },
             { type: 'item', tx: 2, ty: 5, itemId: 'ammo_9mm' },
             { type: 'item', tx: 9, ty: 1, itemId: 'herb_green' },
+            { type: 'item', tx: 8, ty: 5, itemId: 'ammo_357' },
             { type: 'examine', tx: 5, ty: 4, text: 'examine.cabin_103_belongings' },
         ],
         connections: {
@@ -408,7 +411,6 @@ const MAPS = {
             { type: 'item', tx: 19, ty: 5, itemId: 'shotgun' },
             { type: 'item', tx: 2, ty: 15, itemId: 'ammo_12g' },
             { type: 'examine', tx: 10, ty: 8, text: 'examine.engine_room_console' },
-            { type: 'locked_door', tx: 16, ty: 16, doorId: 'engine_cargo_door', keyId: 'key_cargo', targetRoom: 'storage_a' },
         ],
         connections: {
             north: { tx: 4, ty: 1, targetRoom: 'engine_room_ante', targetTx: 7, targetTy: 8 },
@@ -422,9 +424,10 @@ const MAPS = {
     // =========================================================
     storage_a: {
         id: 'storage_a',
-        name: 'Storage Room A',
+        name: 'Storage Room A — Safe Room',
         act: 3,
-        bgm: 'exploration',
+        bgm: 'safe_room',
+        isSafeRoom: true,
         tileWidth: 14,
         tileHeight: 10,
         tiles: [
@@ -440,7 +443,10 @@ const MAPS = {
             [1,1,1,1,1,1,1,1,1,1,1,1,1,1],
         ],
         objects: [
+            { type: 'save_point', tx: 12, ty: 5 },
+            { type: 'item_box', tx: 11, ty: 5 },
             { type: 'item', tx: 2, ty: 4, itemId: 'ammo_9mm' },
+            { type: 'item', tx: 5, ty: 5, itemId: 'ammo_357' },
             { type: 'item', tx: 10, ty: 4, itemId: 'herb_green' },
             { type: 'item', tx: 11, ty: 7, itemId: 'antibiotic' },
             { type: 'file', tx: 2, ty: 2, fileId: 'umbrella_memo' },
@@ -545,7 +551,6 @@ const MAPS = {
             { type: 'file', tx: 10, ty: 7, fileId: 'lucia_letter' },
             { type: 'npc', tx: 10, ty: 6, npcId: 'lucia_lab', dialogueId: 'act2_lucia_found', once: true, condition: 'lucia_not_found' },
             { type: 'cutscene_trigger', tx: 10, ty: 8, cutsceneId: 'act3_creature_revealed', once: true },
-            { type: 'locked_door', tx: 16, ty: 14, keyId: 'key_cargo', targetRoom: 'cargo_hold' },
         ],
         connections: {
             north: { tx: 8, ty: 1, targetRoom: 'lab_corridor', targetTx: 8, targetTy: 7 },

@@ -26,6 +26,7 @@ const SaveSystem = {
             itemBox: [],
             equippedWeapon: null,
             equippedWeaponAmmo: 0,
+            weaponAmmoMap: {},
             // World state
             flags: {},
             visitedRooms: [],

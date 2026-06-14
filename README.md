@@ -1,8 +1,6 @@
 # Resident Evil Gaiden Remake
 
-A fan-made remake of the 2001 Game Boy Color game *Resident Evil Gaiden*, built in Phaser 3 with vanilla JavaScript. No build tools, no external assets — everything is generated in code.
-
----
+A fan-made remake of the 2001 Game Boy Color game *Resident Evil Gaiden*, built in Phaser 3 with vanilla JavaScript.
 
 ## Lore
 
@@ -14,12 +12,12 @@ A fan-made remake of the 2001 Game Boy Color game *Resident Evil Gaiden*, built 
 | B.O.W. creature | **GENESIS-01 / "The Creature"** — Umbrella adaptive mimicry project |
 | Barry Burton (S.T.A.R.S.) | Barry: former S.T.A.R.S., now **Anti-Umbrella clandestine operative** |
 
-### Story with 4 Acts
+### Story — 4 Acts
 
-- **Act 1 — Arrival**: Barry arrives aboard the Starlight during a full outbreak. Meets Leon.
-- **Act 2 — The Search**: Find Lucia. Fight through the restaurant, engine room, and cargo hold.
-- **Act 3 — The Lab**: Discover Umbrella's hidden laboratory. Uncover The Creature's origin.
-- **Act 4 — Two Leons**: The Creature can copy people. Barry must identify the real Leon. Final boss.
+- **Act 1 — Arrival**: Barry lands on the Starlight during a full outbreak. Searches the passenger decks, meets Leon.
+- **Act 2 — The Search**: Descend to the lower decks. Find Lucia in the engine room. Fight through the restaurant and engineering corridors.
+- **Act 3 — The Lab**: Discover Umbrella's hidden laboratory. Uncover The Creature's origin and its terrifying ability.
+- **Act 4 — Two Leons**: The Creature has copied Leon. Barry must identify the real one — then face the final boss.
 
 ---
 
@@ -90,6 +88,19 @@ Each ammo item in the inventory represents a **box** of rounds. The amount of ro
 
 When you equip a weapon or reload (`R`), rounds are automatically drawn from the ammo box(es) in your inventory to fill the chamber.
 
+To **switch weapons**, select the other weapon in the inventory and click **EQUIP**. Each weapon remembers its own loaded chamber — switching away and back doesn't cost you bullets.
+
+---
+
+## Companions
+
+After key story moments, Leon and Lucia join Barry and follow him through every room until the end of the game.
+
+- **Leon** — joins after the first meeting in the restaurant hall. Attacks nearby enemies automatically.
+- **Lucia** — joins after being found in the engine room antechamber (or the laboratory if not found earlier). Also attacks enemies.
+
+Companions match Barry's walking speed and run to catch up when they fall behind.
+
 ---
 
 ## Saving
@@ -129,7 +140,7 @@ js/
 ├── data/
 │   ├── Items.js               — Item definitions (weapons, heals, keys, files)
 │   ├── Enemies.js             — Enemy stats and behavior configs
-│   ├── Maps.js                — 15 rooms: tiles, objects, connections, doors
+│   ├── Maps.js                — 16 rooms: tiles, objects, connections, doors
 │   └── Dialogues.js           — All story dialogue and cutscene scripts
 │
 ├── systems/
@@ -173,9 +184,10 @@ js/
 | `lower_corridor_a` | Lower Deck — Corridor | 2 |
 | `engine_room_ante` | Engine Room — Antechamber | 2 |
 | `engine_room` | Engine Room | 2 |
-| `storage_a` | Cargo Storage A — Safe Room | 3 |
-| `storage_b` | Cargo Storage B | 3 |
+| `storage_a` | Storage Room A — Safe Room | 3 |
+| `storage_b` | Storage Room B | 3 |
 | `lab_corridor` | Umbrella Laboratory — Corridor | 3 |
+| `lab_main` | Hidden Laboratory | 3 |
 | `cargo_hold` | Main Cargo Hold | 4 |
 
 ---

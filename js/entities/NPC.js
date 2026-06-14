@@ -15,7 +15,8 @@ class NPC extends Phaser.GameObjects.Container {
         this.interactRange = CONFIG.TILE_SIZE * 2;
         this.hasSpoken = false;
         this.isFollowing = false;
-        this._followSpeed = 65;
+        this._followSpeed = 140;
+        this._followRunSpeed = 220;
         this._attackRange = CONFIG.TILE_SIZE * 1.8;
         this._attackDamage = 30;
         this._attackCooldown = 0;
@@ -124,12 +125,14 @@ class NPC extends Phaser.GameObjects.Container {
 
         const dist = Phaser.Math.Distance.Between(this.x, this.y, player.x, player.y);
         const minDist = CONFIG.TILE_SIZE * 1.5;
+        const runThreshold = CONFIG.TILE_SIZE * 3.5;
 
         if (dist > minDist) {
+            const speed = dist > runThreshold ? this._followRunSpeed : this._followSpeed;
             const angle = Phaser.Math.Angle.Between(this.x, this.y, player.x, player.y);
             this.body.setVelocity(
-                Math.cos(angle) * this._followSpeed,
-                Math.sin(angle) * this._followSpeed
+                Math.cos(angle) * speed,
+                Math.sin(angle) * speed
             );
         } else {
             this.body.setVelocity(0, 0);

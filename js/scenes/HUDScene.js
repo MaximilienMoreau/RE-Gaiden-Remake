@@ -16,6 +16,7 @@ class HUDScene extends Phaser.Scene {
         EventSystem.on('inventory_changed', this._onInventoryChanged, this);
         EventSystem.on('combat_start', this._onCombatStart, this);
         EventSystem.on('combat_end', this._onCombatEnd, this);
+        EventSystem.on('act_changed', (data) => this._updateAct(data.act), this);
 
         this._buildHUD(W, H);
         this._refreshAll();
@@ -202,5 +203,6 @@ class HUDScene extends Phaser.Scene {
         EventSystem.off('inventory_changed', this._onInventoryChanged);
         EventSystem.off('combat_start', this._onCombatStart);
         EventSystem.off('combat_end', this._onCombatEnd);
+        EventSystem.off('act_changed');
     }
 }
