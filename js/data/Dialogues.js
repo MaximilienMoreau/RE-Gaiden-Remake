@@ -22,12 +22,28 @@ const DIALOGUES = {
         { speaker: 'SYSTEM', text: 'He\'d said the same thing once before. In a mansion, a lifetime ago.', style: 'dim' },
     ],
 
+    prologue_arrived: [
+        { speaker: 'SYSTEM', text: 'AFT DECK — M.S. STARLIGHT — 02:14 HRS', style: 'system' },
+        { speaker: 'BARRY', text: 'Hell of a welcome.', portrait: 'barry' },
+        { speaker: 'BARRY', text: 'Leon. Wherever you are — I\'m coming.', portrait: 'barry' },
+    ],
+
+    act2_licker_warning: [
+        { speaker: 'BARRY', text: 'Something moved on the ceiling.', portrait: 'barry' },
+        { speaker: 'BARRY', text: 'Fast. No eyes. Tongue like a whip.', portrait: 'barry' },
+        { speaker: 'SYSTEM', text: 'Do not let it get close.', style: 'red' },
+    ],
+
     // =========================================================
     // ACT 1 — FIRST MEETING WITH LEON
     // =========================================================
     act1_leon_first_meeting: [
         { speaker: 'BARRY', text: 'Leon. Leon Kennedy — is that you?', portrait: 'barry' },
         { speaker: 'LEON', text: 'Barry? What are you doing here? USSTRATCOM sent you?', portrait: 'leon' },
+        { speaker: 'LEON', text: '[His eyes drop to the handgun in Barry\'s hand]', style: 'action' },
+        { speaker: 'LEON', text: '...That\'s my P226.', portrait: 'leon' },
+        { speaker: 'BARRY', text: 'Found it in one of the cabins on Deck 3. Figured it beat going in empty-handed.', portrait: 'barry' },
+        { speaker: 'LEON', text: 'Keep it. I picked up a Glock from the ship\'s security locker before the radio went down. You\'ll need both barrels before this is over.', portrait: 'leon' },
         { speaker: 'BARRY', text: 'They called in a favor. Said you went dark six hours ago. I figured... hell, I figured someone had to come.', portrait: 'barry' },
         { speaker: 'LEON', text: 'I got separated. Lost my radio on deck two. It\'s bad, Barry. Worse than the intel said.', portrait: 'leon' },
         { speaker: 'BARRY', text: 'I noticed. Full outbreak — every deck, every corridor. And something else. Something I shot twice and it kept walking.', portrait: 'barry' },

@@ -67,28 +67,43 @@ const InventorySystem = {
         return slot ? (slot.qty || 1) : 0;
     },
 
-    // Equip a weapon
+    // Equip a weapon — preserves each weapon's loaded chamber across switches.
     equipWeapon(itemId) {
         const state = SaveSystem.getState();
         if (!state) return false;
         const def = this._getDef(itemId);
         if (!def || def.type !== 'weapon') return false;
 
-        state.equippedWeapon = itemId;
-        // Load ammo — convert boxes → bullets using the ammo item's amount field.
-        const ammoDef = this._getDef(def.ammoType);
-        if (ammoDef) {
-            const bulletsPerBox = ammoDef.amount || 1;
-            const availableBoxes = this.getItemCount(def.ammoType);
-            const availableBullets = availableBoxes * bulletsPerBox;
-            const chambered = state.equippedWeaponAmmo || 0;
-            const toLoad = Math.min(availableBullets, def.ammoCapacity - chambered);
-            if (toLoad > 0) {
-                const boxesToRemove = Math.min(availableBoxes, Math.ceil(toLoad / bulletsPerBox));
-                this.removeItem(def.ammoType, boxesToRemove);
-                state.equippedWeaponAmmo = chambered + toLoad;
-            }
+        if (!state.weaponAmmoMap) state.weaponAmmoMap = {};
+
+        // Persist current weapon's chamber before switching
+        if (state.equippedWeapon && state.equippedWeapon !== itemId) {
+            state.weaponAmmoMap[state.equippedWeapon] = state.equippedWeaponAmmo || 0;
         }
+
+        state.equippedWeapon = itemId;
+
+        // Restore previously saved chamber OR load from inventory boxes (first equip)
+        if (state.weaponAmmoMap[itemId] !== undefined) {
+            state.equippedWeaponAmmo = state.weaponAmmoMap[itemId];
+        } else {
+            const ammoDef = this._getDef(def.ammoType);
+            if (ammoDef) {
+                const bulletsPerBox = ammoDef.amount || 1;
+                const availableBoxes = this.getItemCount(def.ammoType);
+                const toLoad = Math.min(availableBoxes * bulletsPerBox, def.ammoCapacity);
+                if (toLoad > 0) {
+                    this.removeItem(def.ammoType, Math.min(availableBoxes, Math.ceil(toLoad / bulletsPerBox)));
+                    state.equippedWeaponAmmo = toLoad;
+                } else {
+                    state.equippedWeaponAmmo = 0;
+                }
+            } else {
+                state.equippedWeaponAmmo = 0;
+            }
+            state.weaponAmmoMap[itemId] = state.equippedWeaponAmmo;
+        }
+
         EventSystem.emit('weapon_equipped', { itemId, ammo: state.equippedWeaponAmmo });
         return true;
     },
@@ -108,6 +123,8 @@ const InventorySystem = {
         if (!state || !state.equippedWeapon) return false;
         if (state.equippedWeaponAmmo <= 0) return false;
         state.equippedWeaponAmmo--;
+        if (!state.weaponAmmoMap) state.weaponAmmoMap = {};
+        state.weaponAmmoMap[state.equippedWeapon] = state.equippedWeaponAmmo;
         EventSystem.emit('ammo_changed', { ammo: state.equippedWeaponAmmo });
         return true;
     },
@@ -128,6 +145,8 @@ const InventorySystem = {
         const boxesToUse = Math.min(availableBoxes, Math.ceil(bulletsToLoad / bulletsPerBox));
         this.removeItem(def.ammoType, boxesToUse);
         state.equippedWeaponAmmo += bulletsToLoad;
+        if (!state.weaponAmmoMap) state.weaponAmmoMap = {};
+        state.weaponAmmoMap[state.equippedWeapon] = state.equippedWeaponAmmo;
         EventSystem.emit('ammo_changed', { ammo: state.equippedWeaponAmmo });
         return true;
     },

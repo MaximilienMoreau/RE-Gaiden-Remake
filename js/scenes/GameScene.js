@@ -17,6 +17,7 @@ class GameScene extends Phaser.Scene {
     init(data) {
         this._startRoomId = data?.roomId || 'aft_deck';
         this._fromSave = data?.fromSave || false;
+        this._companionRegistry = []; // companions that follow across rooms
     }
 
     create() {
@@ -88,8 +89,21 @@ class GameScene extends Phaser.Scene {
         }
 
         this._currentRoomId = roomId;
-        SaveSystem.getState().player.currentRoom = roomId;
+        const state = SaveSystem.getState();
+        state.player.currentRoom = roomId;
         SaveSystem.markRoomVisited(roomId);
+
+        // Advance act based on room definition
+        if (roomDef.act) {
+            const actKey = `act${roomDef.act}`;
+            if (CONFIG.ACTS[actKey.toUpperCase()] && state.currentAct !== actKey) {
+                const currentNum = parseInt(state.currentAct?.replace('act', '') || '1');
+                if (roomDef.act > currentNum) {
+                    state.currentAct = actKey;
+                    EventSystem.emit('act_changed', { act: actKey });
+                }
+            }
+        }
 
         // Determine safe room state
         this._isSafeRoom = !!roomDef.isSafeRoom;
@@ -112,6 +126,9 @@ class GameScene extends Phaser.Scene {
         const spawnTx = entryTx ?? this._getDefaultSpawn(roomDef).tx;
         const spawnTy = entryTy ?? this._getDefaultSpawn(roomDef).ty;
         this._spawnPlayer(spawnTx, spawnTy);
+
+        // Respawn persistent companions at entry point
+        this._respawnCompanions(spawnTx, spawnTy);
 
         // Camera
         const mapW = roomDef.tileWidth * CONFIG.TILE_SIZE;
@@ -368,6 +385,23 @@ class GameScene extends Phaser.Scene {
                             px: obj.tx * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2,
                             py: obj.ty * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2,
                             cutsceneId: obj.cutsceneId,
+                            radius: CONFIG.TILE_SIZE,
+                            once: obj.once,
+                            triggered: false,
+                        };
+                        if (!this._cutsceneTriggers) this._cutsceneTriggers = [];
+                        this._cutsceneTriggers.push(trig);
+                    }
+                    break;
+                }
+
+                case 'trigger': {
+                    const triggerId = obj.eventId || obj.cutsceneId;
+                    if (triggerId && DIALOGUES[triggerId] && (!obj.once || !SaveSystem.getFlag(`cs_${triggerId}`))) {
+                        const trig = {
+                            px: obj.tx * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2,
+                            py: obj.ty * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2,
+                            cutsceneId: triggerId,
                             radius: CONFIG.TILE_SIZE,
                             once: obj.once,
                             triggered: false,
@@ -969,8 +1003,8 @@ class GameScene extends Phaser.Scene {
             if (data.isBoss) {
                 SaveSystem.setFlag(`boss_defeated_${data.enemyId}`);
                 if (data.enemyId === 'creature_p2') {
-                    // Final boss defeated
-                    this.time.delayedCall(2000, () => this._triggerEnding());
+                    // Trigger epilogue cutscene then end
+                    this.time.delayedCall(1500, () => this._triggerCutscene('act4_lucia_saves_leon'));
                     return;
                 }
             }
@@ -998,11 +1032,32 @@ class GameScene extends Phaser.Scene {
         });
     }
 
+    _respawnCompanions(entryTx, entryTy) {
+        if (!this._companionRegistry || this._companionRegistry.length === 0) return;
+        for (const comp of this._companionRegistry) {
+            // Skip if the room already has this NPC placed (e.g., the first-meeting room)
+            if (this._npcs.find(n => n.npcId === comp.npcId)) continue;
+            const npc = new NPC(this, entryTx, entryTy, comp.npcId, null);
+            npc.hasSpoken = true;
+            npc.isFollowing = true;
+            npc._companionDialogueId = comp.companionDialogueId;
+            this._npcs.push(npc);
+            if (this._wallGroup) this.physics.add.collider(npc, this._wallGroup);
+        }
+    }
+
     _onDialogueClosed(data) {
         // When inventory closes itself it emits { from: 'inventory' } — always allow that through.
         // For any other dialogue_closed (e.g., a READ/EXAMINE dialogue that launched from inside
         // the inventory), skip the reset if the inventory is still open.
         if (data.from !== 'inventory' && this.scene.isActive(CONFIG.SCENES.INVENTORY)) return;
+
+        // After the post-boss epilogue, go straight to the ending — don't unlock input
+        if (data.dialogueId === 'act4_lucia_saves_leon') {
+            this.time.delayedCall(800, () => this._triggerEnding());
+            return;
+        }
+
         this._isBusy = false;
         this._player?.lockInput(false);
 
@@ -1012,14 +1067,20 @@ class GameScene extends Phaser.Scene {
                 leon.isFollowing = true;
                 leon._companionDialogueId = 'leon_companion';
             }
+            if (!this._companionRegistry.find(c => c.npcId === 'leon')) {
+                this._companionRegistry.push({ npcId: 'leon', companionDialogueId: 'leon_companion' });
+            }
         }
 
         if (data.dialogueId === 'act2_lucia_found') {
             SaveSystem.setFlag(CONFIG.FLAGS.ACT2_LUCIA_LOCATED);
-            const lucia = this._npcs.find(n => n.npcId === 'lucia_first_meeting');
+            const lucia = this._npcs.find(n => n.npcId === 'lucia_first_meeting' || n.npcId === 'lucia_lab');
             if (lucia) {
                 lucia.isFollowing = true;
                 lucia._companionDialogueId = 'lucia_ambient';
+                if (!this._companionRegistry.find(c => c.npcId === lucia.npcId)) {
+                    this._companionRegistry.push({ npcId: lucia.npcId, companionDialogueId: 'lucia_ambient' });
+                }
             }
         }
     }
