@@ -90,6 +90,9 @@ const CONFIG = {
         ACT4: 'act4',
     },
 
+    // Exploration
+    FLASHLIGHT_RADIUS: 240,
+
     // Debug
     DEBUG: false,
 };

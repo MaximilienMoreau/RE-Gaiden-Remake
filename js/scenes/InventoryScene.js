@@ -238,7 +238,7 @@ class InventoryScene extends Phaser.Scene {
 
         if (weapon) {
             const isMelee = weapon.def?.subtype === 'melee';
-            const ammoLabel = isMelee ? 'CORPS À CORPS' : `AMMO: ${weapon.ammo} / ${weapon.def?.ammoCapacity || 0}`;
+            const ammoLabel = isMelee ? 'MELEE' : `AMMO: ${weapon.ammo} / ${weapon.def?.ammoCapacity || 0}`;
             this.add.text(detailX, eqY + 35, ammoLabel, {
                 fontSize: '9px', fontFamily: 'Share Tech Mono', color: isMelee ? '#aaffaa' : '#556677',
             });

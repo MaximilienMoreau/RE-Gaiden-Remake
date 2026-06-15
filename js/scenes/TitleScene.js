@@ -258,11 +258,11 @@ class TitleScene extends Phaser.Scene {
     // ─── FOOTER ──────────────────────────────────────────────────────────────
 
     _buildFooter(W, H) {
-        this.add.text(W / 2, H - 40, '↑ ↓  /  W S  —  Naviguer     ENTRÉE  —  Confirmer', {
+        this.add.text(W / 2, H - 40, '↑ ↓  /  W S  —  Navigate     ENTER  —  Confirm', {
             fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#242420', letterSpacing: 2,
         }).setOrigin(0.5);
 
-        this.add.text(W / 2, H - 22, 'U S S T R A T C O M   ·   O P É R A T I O N   S T A R L I G H T   ·   C L A S S I F I É', {
+        this.add.text(W / 2, H - 22, 'U S S T R A T C O M   ·   O P E R A T I O N   S T A R L I G H T   ·   C L A S S I F I E D', {
             fontSize: '8px', fontFamily: 'Share Tech Mono', color: '#171512', letterSpacing: 2,
         }).setOrigin(0.5);
     }
@@ -373,7 +373,7 @@ class TitleScene extends Phaser.Scene {
         // Panel
         modal.push(...this._drawPanel(pX, pY, pW, pH));
 
-        modal.push(this.add.text(W / 2, pY + 20, 'SÉLECTIONNER UN FICHIER', {
+        modal.push(this.add.text(W / 2, pY + 20, 'SELECT SAVE FILE', {
             fontSize: '11px', fontFamily: 'Share Tech Mono', color: '#555550', letterSpacing: 5,
         }).setOrigin(0.5));
 
@@ -431,7 +431,7 @@ class TitleScene extends Phaser.Scene {
             }
         });
 
-        modal.push(this.add.text(W / 2, pY + pH - 16, '[ESC]  Retour', {
+        modal.push(this.add.text(W / 2, pY + pH - 16, '[ESC]  Back', {
             fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#2c2c2a', letterSpacing: 3,
         }).setOrigin(0.5));
 
@@ -455,23 +455,22 @@ class TitleScene extends Phaser.Scene {
 
         modal.push(...this._drawPanel(pX, pY, pW, pH));
 
-        modal.push(this.add.text(W / 2, pY + 20, 'OPTIONS  /  CONTRÔLES', {
+        modal.push(this.add.text(W / 2, pY + 20, 'OPTIONS  /  CONTROLS', {
             fontSize: '11px', fontFamily: 'Share Tech Mono', color: '#555550', letterSpacing: 5,
         }).setOrigin(0.5));
 
         modal.push(...this._divider(pX + 20, pY + 42, pW - 40));
 
-        // Section: déplacement
-        modal.push(this.add.text(pX + 28, pY + 54, 'DÉPLACEMENT', {
+        modal.push(this.add.text(pX + 28, pY + 54, 'MOVEMENT', {
             fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#3a4c5a', letterSpacing: 3,
         }));
 
         const controls = [
-            ['Déplacer',                      'WASD  /  FLÈCHES'],
-            ['Courir',                         'SHIFT  (maintenu)'],
-            ['Interagir / Ramasser',           'E'],
-            ['Ouvrir l\'inventaire',           'I'],
-            ['Recharger',                      'R'],
+            ['Move',                           'WASD  /  ARROWS'],
+            ['Run',                            'SHIFT  (hold)'],
+            ['Interact / Pick up',             'E'],
+            ['Open Inventory',                 'I'],
+            ['Reload',                         'R'],
         ];
         controls.forEach(([k, v], i) => {
             const yy = pY + 72 + i * 28;
@@ -485,14 +484,14 @@ class TitleScene extends Phaser.Scene {
 
         modal.push(...this._divider(pX + 20, pY + 216, pW - 40));
 
-        modal.push(this.add.text(pX + 28, pY + 228, 'EN COMBAT', {
+        modal.push(this.add.text(pX + 28, pY + 228, 'IN COMBAT', {
             fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#3a4c5a', letterSpacing: 3,
         }));
 
         const combat = [
-            ['Tirer / Attaquer',   'ESPACE  (viser le centre = critique)'],
-            ['Esquiver',           'ESPACE  (pendant l\'attaque ennemie)'],
-            ['Utiliser un soin',   'H'],
+            ['Fire / Attack',      'SPACE  (aim center = critical)'],
+            ['Dodge',              'SPACE  (during enemy attack)'],
+            ['Use heal item',      'H'],
         ];
         combat.forEach(([k, v], i) => {
             const yy = pY + 246 + i * 28;
@@ -506,7 +505,7 @@ class TitleScene extends Phaser.Scene {
 
         modal.push(...this._divider(pX + 20, pY + 326, pW - 40));
 
-        modal.push(this.add.text(W / 2, pY + pH - 18, '[ESC]  Retour', {
+        modal.push(this.add.text(W / 2, pY + pH - 18, '[ESC]  Back', {
             fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#2c2c2a', letterSpacing: 3,
         }).setOrigin(0.5));
 

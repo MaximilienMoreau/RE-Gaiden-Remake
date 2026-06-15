@@ -14,10 +14,10 @@ A fan-made remake of the 2001 Game Boy Color game *Resident Evil Gaiden*, built 
 
 ### Story — 4 Acts
 
-- **Act 1 — Arrival**: Barry lands on the Starlight during a full outbreak. Searches the passenger decks, meets Leon.
-- **Act 2 — The Search**: Descend to the lower decks. Find Lucia in the engine room. Fight through the restaurant and engineering corridors.
-- **Act 3 — The Lab**: Discover Umbrella's hidden laboratory. Uncover The Creature's origin and its terrifying ability.
-- **Act 4 — Two Leons**: The Creature has copied Leon. Barry must identify the real one — then face the final boss.
+- **Act 1: Arrival**: Barry lands on the Starlight during a full outbreak. Searches the passenger decks, meets Leon.
+- **Act 2: The Search**: Descend to the lower decks. Find Lucia in the engine room. Fight through the restaurant and engineering corridors.
+- **Act 3: The Lab**: Discover Umbrella's hidden laboratory. Uncover The Creature's origin and its terrifying ability.
+- **Act 4: Two Leons**: The Creature has copied Leon. Barry must identify the real one — then face the final boss.
 
 ---
 
@@ -82,7 +82,7 @@ Each ammo item in the inventory represents a **box** of rounds. The amount of ro
 
 | Ammo | Rounds per box | Weapon |
 |---|---|---|
-| `.357 Magnum` | 6 | Colt Python (Barry's revolver) |
+| `.357 Magnum Rounds` | 6 | Colt Python (Barry's revolver) |
 | `9mm Rounds` | 15 | Handgun (SIG P226) |
 | `12-Gauge Shells` | 6 | Remington M870 Shotgun |
 
@@ -109,6 +109,12 @@ Companions match Barry's walking speed and run to catch up when they fall behind
 - 3 save slots are available.
 - The game displays the room name and date for each slot.
 - In-game hint: `[E]` on a typewriter → select a slot → saved.
+
+## Item Box
+
+- Interact with an **item box** object in safe rooms to open it.
+- Lists everything currently stored — click **[TAKE]** to withdraw an item into your inventory (requires a free slot).
+- Item box contents persist across saves.
 
 ---
 

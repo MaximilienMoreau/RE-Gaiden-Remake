@@ -1691,16 +1691,16 @@ const AssetGenerator = {
                 // Canon
                 gfx.fillStyle(0x2a2a2a);
                 gfx.fillRect(14, 13, 16, 5);
-                // Carcasse / poignée
+                // Frame / grip
                 gfx.fillStyle(0x3a2a1a);
                 gfx.fillRect(13, 10, 5, 8);
                 gfx.fillRect(14, 18, 4, 10);
-                // Barillet (cercle caractéristique du révolver)
+                // Cylinder (revolver's distinctive circle)
                 gfx.fillStyle(0x484848);
                 gfx.fillCircle(10, 16, 7);
                 gfx.fillStyle(0x1a1a1a);
                 gfx.fillCircle(10, 16, 5);
-                // Alvéoles du barillet
+                // Cylinder chambers
                 gfx.fillStyle(0x080808);
                 gfx.fillCircle(10, 12, 1);
                 gfx.fillCircle(13, 14, 1);
