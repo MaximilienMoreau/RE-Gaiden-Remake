@@ -26,7 +26,6 @@ class GameScene extends Phaser.Scene {
         // Init save state if needed
         if (!SaveSystem.getState()) {
             SaveSystem.newGame();
-            // Barry démarre avec son Colt Python, son couteau et 2 chargeurs de réserve
             InventorySystem.addItem('knife');
             InventorySystem.addItem('barry_revolver');
             InventorySystem.addItem('ammo_357', 2);
@@ -499,7 +498,7 @@ class GameScene extends Phaser.Scene {
     _showLockedMessage(keyId) {
         if (this._lockMessageShown) return;
         this._lockMessageShown = true;
-        setTimeout(() => { this._lockMessageShown = false; }, 2000);
+        this.time.delayedCall(2000, () => { this._lockMessageShown = false; });
 
         const keyDef = ITEMS[keyId?.toUpperCase()] || Object.values(ITEMS).find(i => i.id === keyId);
         const msg = keyDef ? `Requires: ${keyDef.name}` : 'Locked. Requires a key.';
@@ -766,7 +765,7 @@ class GameScene extends Phaser.Scene {
                 InventorySystem.equipWeapon(def.id);
             } else if (def.type === 'weapon' && state.equippedWeapon && state.equippedWeapon !== def.id) {
                 this.time.delayedCall(700, () => {
-                    this._showFloatingMessage('[I] pour changer d\'arme', '#88ccff');
+                    this._showFloatingMessage('[I] to switch weapon', '#88ccff');
                 });
             }
 
@@ -922,8 +921,85 @@ class GameScene extends Phaser.Scene {
     }
 
     _showItemBox() {
-        // Simplified item box UI
-        this._showFloatingMessage('Item Box opened. (Inventory management available via [I])', '#88ccaa');
+        if (this._isBusy) return;
+        this._isBusy = true;
+        this._player?.lockInput(true);
+
+        const W = CONFIG.WIDTH, H = CONFIG.HEIGHT;
+        const box = SaveSystem.getState()?.itemBox || [];
+
+        const overlay = this.add.graphics().setScrollFactor(0).setDepth(100);
+        overlay.fillStyle(0x000000, 0.85);
+        overlay.fillRect(0, 0, W, H);
+
+        const panel = this.add.graphics().setScrollFactor(0).setDepth(101);
+        panel.fillStyle(0x060c10, 1);
+        panel.fillRect(W / 2 - 220, H / 2 - 180, 440, 360);
+        panel.lineStyle(2, 0x00cc66, 0.4);
+        panel.strokeRect(W / 2 - 220, H / 2 - 180, 440, 360);
+
+        const header = this.add.text(W / 2, H / 2 - 160, '— ITEM BOX —', {
+            fontSize: '12px', fontFamily: 'Share Tech Mono', color: '#00cc66', letterSpacing: 5,
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(102);
+
+        const uiRefs = [overlay, panel, header];
+
+        const escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+        const close = () => {
+            this.input.keyboard.removeKey(escKey);
+            uiRefs.forEach(r => r.destroy());
+            this._isBusy = false;
+            this._player?.lockInput(false);
+        };
+
+        if (box.length === 0) {
+            const empty = this.add.text(W / 2, H / 2, 'Item Box is empty.', {
+                fontSize: '10px', fontFamily: 'Share Tech Mono', color: '#446655',
+            }).setOrigin(0.5).setScrollFactor(0).setDepth(102);
+            uiRefs.push(empty);
+        } else {
+            box.forEach((boxItem, i) => {
+                const def = ITEMS[boxItem.id?.toUpperCase()] || Object.values(ITEMS).find(it => it.id === boxItem.id);
+                if (!def) return;
+                const yy = H / 2 - 120 + i * 44;
+
+                const rowBg = this.add.graphics().setScrollFactor(0).setDepth(101);
+                rowBg.fillStyle(0x0d1e12, 1);
+                rowBg.fillRect(W / 2 - 200, yy - 14, 400, 36);
+                rowBg.lineStyle(1, 0x1a4028, 1);
+                rowBg.strokeRect(W / 2 - 200, yy - 14, 400, 36);
+                uiRefs.push(rowBg);
+
+                const label = this.add.text(W / 2 - 180, yy, `${def.name}  ×${boxItem.qty || 1}`, {
+                    fontSize: '10px', fontFamily: 'Share Tech Mono', color: '#99ccaa',
+                }).setScrollFactor(0).setDepth(102);
+                uiRefs.push(label);
+
+                const takeBtn = this.add.text(W / 2 + 170, yy, '[TAKE]', {
+                    fontSize: '10px', fontFamily: 'Share Tech Mono', color: '#44cc88',
+                }).setOrigin(1, 0).setScrollFactor(0).setDepth(102).setInteractive({ useHandCursor: true });
+
+                takeBtn.on('pointerover', () => takeBtn.setColor('#ffffff'));
+                takeBtn.on('pointerout', () => takeBtn.setColor('#44cc88'));
+                takeBtn.on('pointerdown', () => {
+                    if (InventorySystem.withdrawFromBox(boxItem.id)) {
+                        AudioSynth.sfx('item_pickup');
+                        EventSystem.emit('inventory_changed', {});
+                        close();
+                    } else {
+                        this._showFloatingMessage('Inventory full!', '#ff4444');
+                    }
+                });
+                uiRefs.push(takeBtn);
+            });
+        }
+
+        const closeHint = this.add.text(W / 2, H / 2 + 155, '[ESC] CLOSE', {
+            fontSize: '10px', fontFamily: 'Share Tech Mono', color: '#446655',
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(102);
+        uiRefs.push(closeHint);
+
+        escKey.once('down', close);
     }
 
     _showExamineText(textKey) {
@@ -1017,7 +1093,7 @@ class GameScene extends Phaser.Scene {
                             const def = ITEMS[drop.toUpperCase()] || Object.values(ITEMS).find(i => i.id === drop);
                             this._showFloatingMessage(`+ ${def?.name || drop}`, '#ffcc44');
                         } else {
-                            this._showFloatingMessage('Inventaire plein — objet perdu !', '#ff4444');
+                            this._showFloatingMessage('Inventory full — item lost!', '#ff4444');
                         }
                     });
                 }
@@ -1169,8 +1245,7 @@ class GameScene extends Phaser.Scene {
         this._darknessLayer.clear();
         this._darknessLayer.fill(0x000000, 0.13);
 
-        // Erase a circle (flashlight)
-        const radius = 240;
+        const radius = CONFIG.FLASHLIGHT_RADIUS;
         this._darknessLayer.erase('noise', screenX - radius, screenY - radius, radius * 2, radius * 2);
 
         // Small ambient glow
@@ -1302,11 +1377,11 @@ class GameScene extends Phaser.Scene {
         overlay.fillStyle(0x000000, 0.9);
         overlay.fillRect(0, 0, W, H);
 
-        this.add.text(W / 2, H / 2 - 130, '— IDENTIFY THE REAL LEON —', {
+        const titleText = this.add.text(W / 2, H / 2 - 130, '— IDENTIFY THE REAL LEON —', {
             fontSize: '11px', fontFamily: 'Share Tech Mono', color: '#cc4444', letterSpacing: 4,
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
 
-        this.add.text(W / 2, H / 2 - 100, '"What was the name of the girl you escaped Raccoon City with?"', {
+        const questionText = this.add.text(W / 2, H / 2 - 100, '"What was the name of the girl you escaped Raccoon City with?"', {
             fontSize: '11px', fontFamily: 'Share Tech Mono', color: '#888', wordWrap: { width: 500 }, align: 'center',
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
 
@@ -1315,7 +1390,7 @@ class GameScene extends Phaser.Scene {
             { text: 'LEON B says: "Claire Redfield"', correct: true },
         ];
 
-        const elements = [overlay];
+        const elements = [overlay, titleText, questionText];
 
         choices.forEach((choice, i) => {
             const yy = H / 2 - 20 + i * 60;

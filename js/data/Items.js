@@ -34,21 +34,21 @@ const ITEMS = {
 
     KNIFE: {
         id: 'knife',
-        name: 'Couteau de combat',
-        desc: 'Couteau tactique de Barry. Corps à corps uniquement.',
+        name: 'Combat Knife',
+        desc: "Barry's tactical knife. Melee only.",
         type: 'weapon',
         subtype: 'melee',
         damage: 10,
         icon: 'item_knife',
         size: [1, 1],
         stackable: false,
-        examineText: 'Un couteau tactique militaire. Lame courte, acier inoxydable. Efficace uniquement à bout portant. Dernier recours quand les munitions manquent.',
+        examineText: "A military-grade tactical knife. Short blade, stainless steel. Only effective at point-blank range. Last resort when ammo runs dry.",
     },
 
     BARRY_REVOLVER: {
         id: 'barry_revolver',
         name: 'Colt Python .357',
-        desc: 'Le révolver de Barry. Puissant et fiable. Six coups.',
+        desc: "Barry's signature revolver. Powerful and reliable. Six rounds.",
         type: 'weapon',
         subtype: 'gun',
         ammoType: 'ammo_357',
@@ -57,14 +57,14 @@ const ITEMS = {
         icon: 'item_barry_revolver',
         size: [2, 1],
         stackable: false,
-        examineText: 'Un Colt Python .357 Magnum. Usé par des années de service. "B.B." est gravé sur la crosse. L\'arme de signature de Barry — et elle tire toujours comme au premier jour.',
+        examineText: "A Colt Python .357 Magnum. Worn from years of service. \"B.B.\" is engraved on the grip. Barry's signature weapon — and it still fires like day one.",
     },
 
     // Ammo
     AMMO_357: {
         id: 'ammo_357',
-        name: 'Balles .357 Magnum',
-        desc: 'Munitions pour révolver. 6 cartouches par chargeur rapide.',
+        name: '.357 Magnum Rounds',
+        desc: 'Revolver ammunition. 6 rounds per speedloader.',
         type: 'ammo',
         amount: 6,
         icon: 'item_ammo_357',

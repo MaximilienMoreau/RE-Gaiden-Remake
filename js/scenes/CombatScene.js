@@ -381,7 +381,7 @@ class CombatScene extends Phaser.Scene {
     _updateAmmoDisplay() {
         if (this._ammoText) {
             if (this._isMelee) {
-                this._ammoText.setText('CORPS À CORPS');
+                this._ammoText.setText('MELEE');
                 this._ammoText.setColor('#aaffaa');
                 return;
             }
@@ -397,11 +397,11 @@ class CombatScene extends Phaser.Scene {
     }
 
     _buildInstructions(W, H) {
-        this._instructionText = this.add.text(W / 2, H * 0.91, 'VISER LE CENTRE POUR FRAPPER CRITIQUE', {
+        this._instructionText = this.add.text(W / 2, H * 0.91, 'AIM FOR THE CENTER FOR A CRITICAL HIT', {
             fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#446688', letterSpacing: 3,
         }).setOrigin(0.5);
 
-        this.add.text(W / 2, H * 0.96, 'ESPACE / F — Tirer  ·  H — Utiliser soin', {
+        this.add.text(W / 2, H * 0.96, 'SPACE / F — Fire  ·  H — Use heal', {
             fontSize: '8px', fontFamily: 'Share Tech Mono', color: '#4a4a4a', letterSpacing: 1,
         }).setOrigin(0.5);
     }
@@ -525,7 +525,7 @@ class CombatScene extends Phaser.Scene {
         const finalDmg = this._isMelee ? (this._weaponDef?.damage || 10) : (knifeDef?.damage || 10);
         AudioSynth.sfx('combat_hit');
         this._enemyHp -= finalDmg;
-        this._showCombatMessage(`COUTEAU! -${finalDmg}`, '#aaffaa');
+        this._showCombatMessage(`KNIFE! -${finalDmg}`, '#aaffaa');
         this._enemyShakeEffect(true);
         this._updateEnemyHpDisplay();
 

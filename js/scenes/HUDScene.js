@@ -83,7 +83,7 @@ class HUDScene extends Phaser.Scene {
         }).setOrigin(1, 0);
 
         // Controls hint
-        this.add.text(W / 2, H - 8, 'WASD / ARROWS — Déplacer  ·  SHIFT — Courir  ·  E — Interagir / Ramasser  ·  I — Inventaire  ·  R — Recharger', {
+        this.add.text(W / 2, H - 8, 'WASD / ARROWS — Move  ·  SHIFT — Run  ·  E — Interact / Pick up  ·  I — Inventory  ·  R — Reload', {
             fontSize: '7px', fontFamily: 'Share Tech Mono', color: '#4a4a4a', letterSpacing: 1,
         }).setOrigin(0.5, 1);
 
@@ -157,7 +157,7 @@ class HUDScene extends Phaser.Scene {
         this._weaponNameText.setText(weapon.def?.name || weapon.id);
 
         if (weapon.def?.subtype === 'melee') {
-            this._ammoText.setText('CORPS À CORPS');
+            this._ammoText.setText('MELEE');
             this._ammoText.setColor('#aaffaa');
             this._ammoBar.clear();
             return;
@@ -203,7 +203,6 @@ class HUDScene extends Phaser.Scene {
     _onCombatStart() { this._setHpPanelVisible(false); }
     _onCombatEnd() { this._setHpPanelVisible(true); }
 
-    // shutdown() est appelé par scene.stop() — c'est le bon hook Phaser pour le nettoyage
     shutdown() {
         EventSystem.off('player_hp_changed', this._onHpChanged);
         EventSystem.off('weapon_equipped', this._onWeaponEquipped);
