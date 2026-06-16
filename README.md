@@ -12,7 +12,7 @@ A fan-made remake of the 2001 Game Boy Color game *Resident Evil Gaiden*, built 
 | B.O.W. creature | **GENESIS-01 / "The Creature"** — Umbrella adaptive mimicry project |
 | Barry Burton (S.T.A.R.S.) | Barry: former S.T.A.R.S., now **Anti-Umbrella clandestine operative** |
 
-### Story — 4 Acts
+### Story with 4 Acts
 
 - **Act 1: Arrival**: Barry lands on the Starlight during a full outbreak. Searches the passenger decks, meets Leon.
 - **Act 2: The Search**: Descend to the lower decks. Find Lucia in the engine room. Fight through the restaurant and engineering corridors.
@@ -53,12 +53,12 @@ Combat triggers automatically when Barry gets close to an enemy. A targeting ret
 | Key | Action |
 |---|---|
 | `SPACE` / `F` | **Fire** (or **Dodge** if an attack warning is flashing) |
-| `H` | Use best available heal item (spray > mixed herb > green herb) |
+| `H` | Use best available heal item (spray > mixed herb > green herb > antibiotic) |
 
 **Hit zones:**
 - Center (green) → **Critical hit** — ×3 damage
 - Near center (yellow) → **Hit** — normal damage
-- Edges (red) → **Miss** — ammo spent, no damage
+- Edges (red) → **Miss** → ammo spent, minimal damage (×0.2)
 
 **No ammo?** Barry automatically uses his **knife** (10 damage, no reticle required).
 

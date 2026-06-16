@@ -24,27 +24,23 @@ class GameOverScene extends Phaser.Scene {
         });
 
         // Text
-        this.add.text(W / 2, H / 2 - 40, 'YOU ARE DEAD', {
+        const mainText = this.add.text(W / 2, H / 2 - 40, 'YOU ARE DEAD', {
             fontSize: '36px', fontFamily: 'Oswald, sans-serif', fontStyle: 'bold',
             color: '#cc0000', stroke: '#000', strokeThickness: 8,
             letterSpacing: 8,
-        }).setOrigin(0.5).setAlpha(0).setData('main', true);
-
-        const mainText = this.children.getAll().find(c => c.getData?.('main'));
+        }).setOrigin(0.5).setAlpha(0);
 
         this.add.text(W / 2, H / 2 + 20, 'OPERATOR DOWN', {
             fontSize: '12px', fontFamily: 'Share Tech Mono', color: '#660000', letterSpacing: 6,
         }).setOrigin(0.5);
 
-        if (mainText) {
-            this.tweens.add({
-                targets: mainText,
-                alpha: 1,
-                duration: 1500,
-                delay: 500,
-                ease: 'Power2',
-            });
-        }
+        this.tweens.add({
+            targets: mainText,
+            alpha: 1,
+            duration: 1500,
+            delay: 500,
+            ease: 'Power2',
+        });
 
         // Quote
         const quotes = [

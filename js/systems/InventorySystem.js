@@ -163,7 +163,7 @@ const InventorySystem = {
         if (def.curesPoison) {
             state.flags['poisoned'] = false;
         }
-        EventSystem.emit('player_healed', { amount: healed, hp: state.player.hp });
+        EventSystem.emit('player_hp_changed', { hp: state.player.hp, hpMax: state.player.hpMax });
         return true;
     },
 

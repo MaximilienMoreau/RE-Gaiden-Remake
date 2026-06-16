@@ -439,14 +439,14 @@ class InventoryScene extends Phaser.Scene {
                 }});
             }
         }
-        actions.push({ label: 'EXAMINE', fn: () => {
-            if (def.examineText) {
+        if (def.examineText) {
+            actions.push({ label: 'EXAMINE', fn: () => {
                 this.scene.launch(CONFIG.SCENES.DIALOGUE, {
                     singleText: def.examineText,
                     callerScene: CONFIG.SCENES.INVENTORY,
                 });
-            }
-        }});
+            }});
+        }
         actions.push({ label: 'DISCARD', fn: () => {
             InventorySystem.removeItem(def.id);
             this._close();
