@@ -868,7 +868,6 @@ class GameScene extends Phaser.Scene {
         }).setOrigin(0.5).setScrollFactor(0).setDepth(102);
 
         const uiRefs = [overlay, panel, header];
-        const slotTexts = [];
 
         // Declare escKey early so close() can reference it for cleanup.
         const escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
@@ -898,7 +897,6 @@ class GameScene extends Phaser.Scene {
                     `SLOT ${i + 1} · [EMPTY]`,
                 { fontSize: '10px', fontFamily: 'Share Tech Mono', color: info.exists ? '#99ccaa' : '#335544' }
             ).setScrollFactor(0).setDepth(102);
-            slotTexts.push(slotText);
             uiRefs.push(slotText);
 
             slotText.setInteractive().on('pointerdown', () => {
