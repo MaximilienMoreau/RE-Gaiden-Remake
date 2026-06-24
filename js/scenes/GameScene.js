@@ -862,10 +862,11 @@ class GameScene extends Phaser.Scene {
 
         // Quote
         const quote = DIALOGUES.save_room_quotes[Math.floor(Math.random() * DIALOGUES.save_room_quotes.length)];
-        this.add.text(W / 2, H / 2 - 85, quote, {
+        const quoteText = this.add.text(W / 2, H / 2 - 85, quote, {
             fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#447755',
             wordWrap: { width: 380 }, align: 'center',
         }).setOrigin(0.5).setScrollFactor(0).setDepth(102);
+        uiRefs.push(quoteText);
 
         const uiRefs = [overlay, panel, header];
 
@@ -1160,6 +1161,9 @@ class GameScene extends Phaser.Scene {
             return;
         }
 
+        // Don't unlock input while the Two Leons choice overlay is being shown
+        if (data.dialogueId === 'act4_two_leons_intro') return;
+
         this._isBusy = false;
         this._player?.lockInput(false);
 
@@ -1402,8 +1406,8 @@ class GameScene extends Phaser.Scene {
                 fontSize: '11px', fontFamily: 'Share Tech Mono', color: '#ccbbbb',
             }).setOrigin(0.5).setScrollFactor(0).setDepth(202).setInteractive();
 
-            txt.on('pointerover', () => { bg.clear(); bg.fillStyle(0x3a0a0a, 1); bg.fillRect(W / 2 - 200, yy - 20, 400, 44); });
-            txt.on('pointerout', () => { bg.clear(); bg.fillStyle(0x1a0a0a, 1); bg.fillRect(W / 2 - 200, yy - 20, 400, 44); });
+            txt.on('pointerover', () => { bg.clear(); bg.fillStyle(0x3a0a0a, 1); bg.fillRect(W / 2 - 200, yy - 20, 400, 44); bg.lineStyle(1, 0x882222, 1); bg.strokeRect(W / 2 - 200, yy - 20, 400, 44); });
+            txt.on('pointerout', () => { bg.clear(); bg.fillStyle(0x1a0a0a, 1); bg.fillRect(W / 2 - 200, yy - 20, 400, 44); bg.lineStyle(1, 0x442222, 1); bg.strokeRect(W / 2 - 200, yy - 20, 400, 44); });
 
             txt.on('pointerdown', () => {
                 elements.forEach(e => e.destroy());
