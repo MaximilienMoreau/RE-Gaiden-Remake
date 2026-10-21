@@ -29,6 +29,7 @@ class CombatScene extends Phaser.Scene {
         this._reticleDir = 1;
         this._reticleSpeed = CONFIG.COMBAT.RETICLE_BASE_SPEED *
             (def?.combat?.reticleSpeed || 1.0);
+        this._inDodgeWindowOpen = false;
         this._inDodgeWindow = false;
         this._dodgeTimer = 0;
         this._attackWarningShown = false;
@@ -386,12 +387,11 @@ class CombatScene extends Phaser.Scene {
                 return;
             }
             const weapon = InventorySystem.getEquippedWeapon();
-            const ammo = weapon?.ammo || this._ammoCount;
+            const ammo = weapon?.ammo ?? this._ammoCount;
             const cap = this._weaponDef?.ammoCapacity || 0;
             const ammoType = this._weaponDef?.ammoType || '';
-            const reserves = InventorySystem.getItemCount(ammoType);
-            const ammoPerBox = ITEMS[ammoType.toUpperCase()]?.amount || 6;
-            this._ammoText.setText(`${ammo}/${cap} + ${reserves * ammoPerBox}`);
+            const reserves = InventorySystem.getReserveAmmo(ammoType);
+            this._ammoText.setText(`${ammo}/${cap} + ${reserves}`);
             this._ammoText.setColor(ammo <= 2 ? '#ff4444' : '#888870');
         }
     }
@@ -433,7 +433,6 @@ class CombatScene extends Phaser.Scene {
         if (this._isMelee) {
             this._meleeAttack();
             this._totalTurns++;
-            this._nextAttackAt = this.time.now + this._attackInterval + Math.random() * 1000;
             return;
         }
 
@@ -587,6 +586,8 @@ class CombatScene extends Phaser.Scene {
 
         // Update enemy
         this._enemyDef = newDef;
+        this._enemyId = newDef.id;
+        this._attackInterval = newDef.attackRate || 3000;
         this._enemyHp = newDef.hp;
         this._enemyMaxHp = newDef.hp;
         this._reticleSpeed = CONFIG.COMBAT.RETICLE_BASE_SPEED * (newDef.combat?.reticleSpeed || 1.0);
@@ -617,7 +618,7 @@ class CombatScene extends Phaser.Scene {
     }
 
     _handleEnemyAttack() {
-        if (this._finished) return;
+        if (this._finished || this._victory) return;
         const def = this._enemyDef;
         if (!def) return;
 
@@ -628,7 +629,7 @@ class CombatScene extends Phaser.Scene {
         this._turnPhase = 'enemy_attack';
 
         this.time.delayedCall(800, () => {
-            if (this._finished) return;
+            if (this._finished || this._victory) return;
             // Check if player dodged
             if (this._inDodgeWindow) {
                 this._showCombatMessage('DODGED!', '#44ff88');
@@ -679,17 +680,16 @@ class CombatScene extends Phaser.Scene {
             letterSpacing: 3,
         }).setOrigin(0.5).setDepth(50);
 
+        const message = this._combatMsgText;
         this.tweens.add({
-            targets: this._combatMsgText,
+            targets: message,
             alpha: { from: 1, to: 0 },
             y: CONFIG.HEIGHT * 0.56 - 20,
             duration: 2000,
             delay: 800,
             onComplete: () => {
-                if (this._combatMsgText) {
-                    this._combatMsgText.destroy();
-                    this._combatMsgText = null;
-                }
+                message.destroy();
+                if (this._combatMsgText === message) this._combatMsgText = null;
             },
         });
     }
@@ -761,10 +761,9 @@ class CombatScene extends Phaser.Scene {
         const healPriority = ['first_aid_spray', 'herb_mixed', 'herb_green', 'antibiotic'];
         for (const itemId of healPriority) {
             if (InventorySystem.hasItem(itemId)) {
-                InventorySystem.useHealItem(itemId);
-                const amount = ITEMS[itemId.toUpperCase()]?.healAmount || 0;
+                if (!InventorySystem.useHealItem(itemId)) continue;
                 const hpBefore = this._playerHp;
-                this._playerHp = Math.min(this._playerHpMax, this._playerHp + amount);
+                this._playerHp = SaveSystem.getState().player.hp;
                 const actualHeal = this._playerHp - hpBefore;
                 this._updatePlayerHpDisplay();
                 AudioSynth.sfx('herb_use');
@@ -780,7 +779,7 @@ class CombatScene extends Phaser.Scene {
     // UPDATE
     // =========================================================
     update(time, delta) {
-        if (this._finished) return;
+        if (this._finished || this._victory) return;
 
         const dt = delta / 1000;
 

@@ -286,3 +286,20 @@ Add a `_bgmMyTrack()` method to `AudioSynth`, register it in `playBgm()`, then r
 *This is an unofficial fan project with no commercial intent.*
 
 </div>
+
+
+## Automated regression checks
+
+With Node.js 18 or newer, run:
+
+```sh
+node tests/regressions.cjs
+```
+
+No dependency installation is required. These checks exercise inventory and ammo
+conservation, save/load, companion restoration, the final story sequence, and map
+connections using lightweight scene stubs. Rendering, audio, and a complete
+playthrough must still be checked in a browser.
+
+Keys remain reusable until stored in the item box and cannot be discarded.
+Partial reloads preserve unused rounds in the ammunition reserve across saves.

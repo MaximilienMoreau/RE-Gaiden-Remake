@@ -10,6 +10,7 @@ class EndingScene extends Phaser.Scene {
     }
 
     create() {
+        this.events.once('shutdown', this.shutdown, this);
         const W = CONFIG.WIDTH, H = CONFIG.HEIGHT;
 
         this.add.rectangle(W / 2, H / 2, W, H, 0x000000);

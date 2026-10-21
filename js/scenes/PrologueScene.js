@@ -11,6 +11,7 @@ class PrologueScene extends Phaser.Scene {
     }
 
     create() {
+        this.events.once('shutdown', this.shutdown, this);
         const W = CONFIG.WIDTH, H = CONFIG.HEIGHT;
 
         this._lines = DIALOGUES.prologue;

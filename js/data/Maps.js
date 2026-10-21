@@ -132,7 +132,7 @@ const MAPS = {
             { type: 'examine', tx: 6, ty: 5, text: 'examine.mirror_cabin' },
         ],
         connections: {
-            north: { tx: 4, ty: 7, targetRoom: 'deck_corridor_a', targetTx: 1, targetTy: 2 },
+            north: { tx: 4, ty: 7, targetRoom: 'deck_corridor_a', targetTx: 2, targetTy: 1 },
         },
     },
 
@@ -164,7 +164,7 @@ const MAPS = {
             { type: 'examine', tx: 7, ty: 2, text: 'examine.overturned_table' },
         ],
         connections: {
-            north: { tx: 4, ty: 7, targetRoom: 'deck_corridor_a', targetTx: 18, targetTy: 2 },
+            north: { tx: 4, ty: 7, targetRoom: 'deck_corridor_a', targetTx: 17, targetTy: 1 },
         },
     },
 
@@ -334,7 +334,7 @@ const MAPS = {
             { type: 'trigger', tx: 10, ty: 4, eventId: 'act2_licker_warning', once: true },
         ],
         connections: {
-            north: { tx: 11, ty: 1, targetRoom: 'restaurant_hall', targetTx: 11, targetTy: 17 },
+            north: { tx: 11, ty: 1, targetRoom: 'restaurant_hall', targetTx: 11, targetTy: 16 },
             south: { tx: 9, ty: 7, targetRoom: 'engine_room_ante', targetTx: 9, targetTy: 1 },
         },
     },
@@ -553,7 +553,7 @@ const MAPS = {
             { type: 'cutscene_trigger', tx: 10, ty: 8, cutsceneId: 'act3_creature_revealed', once: true },
         ],
         connections: {
-            north: { tx: 8, ty: 1, targetRoom: 'lab_corridor', targetTx: 8, targetTy: 7 },
+            north: { tx: 8, ty: 1, targetRoom: 'lab_corridor', targetTx: 7, targetTy: 7 },
             south: { tx: 3, ty: 14, targetRoom: 'cargo_hold', targetTx: 5, targetTy: 1, locked: true, keyId: 'key_cargo', doorId: 'door_lab_cargo' },
             south_east: { tx: 16, ty: 14, targetRoom: 'cargo_hold', targetTx: 14, targetTy: 1 },
         },
@@ -598,7 +598,6 @@ const MAPS = {
             { type: 'item', tx: 11, ty: 15, itemId: 'first_aid_spray' },
             { type: 'examine', tx: 3, ty: 2, text: 'examine.umbrella_container_open' },
             { type: 'boss_trigger', tx: 11, ty: 10, bossId: 'creature_p1', cutsceneId: 'act3_creature_revealed', once: true },
-            { type: 'cutscene_trigger', tx: 11, ty: 6, cutsceneId: 'act4_two_leons_intro', once: true, condition: 'act3_creature_sighted' },
         ],
         connections: {
             north: { tx: 5, ty: 1, targetRoom: 'lab_main', targetTx: 3, targetTy: 14 },

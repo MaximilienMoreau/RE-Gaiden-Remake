@@ -133,6 +133,7 @@ class Enemy extends Phaser.GameObjects.Container {
     }
 
     _chasePlayer(dx, dy, dist, dt) {
+        if (dist === 0) { this.body.setVelocity(0, 0); return; }
         const nx = dx / dist;
         const ny = dy / dist;
         this.body.setVelocity(nx * this.speed, ny * this.speed);
