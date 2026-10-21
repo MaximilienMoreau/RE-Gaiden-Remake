@@ -303,3 +303,14 @@ playthrough must still be checked in a browser.
 
 Keys remain reusable until stored in the item box and cannot be discarded.
 Partial reloads preserve unused rounds in the ammunition reserve across saves.
+
+
+## Interface refresh
+
+The interface uses a shared theme in `js/utils/UITheme.js`: charcoal panels,
+muted red accents, Inter for interface text and Oswald for display headings.
+The title menu supports mouse and keyboard navigation. The canvas fits its
+container while preserving the game's aspect ratio; small rooms are centered.
+Character sprites and room textures retain the existing procedural art.
+
+Previews: [title menu](assets/previews/menu.png) · [inventory](assets/previews/inventory.png).

@@ -11,9 +11,13 @@ class InventoryScene extends Phaser.Scene {
     init(data) {
         this._callerScene = data.callerScene || CONFIG.SCENES.GAME;
         this._closing = false;
+        this._selectedSlot = -1;
+        this._actionButtonObjs = null;
+        this._contextMenu = null;
     }
 
     create() {
+        this.scene.bringToTop();
         const W = CONFIG.WIDTH, H = CONFIG.HEIGHT;
 
         this.cameras.main.setBackgroundColor('rgba(0,0,0,0)');
@@ -27,22 +31,16 @@ class InventoryScene extends Phaser.Scene {
         const panelX = 40, panelY = 40;
         const panelW = W - 80, panelH = H - 80;
 
-        this._panel = this.add.graphics();
-        this._panel.fillStyle(0x050810, 1);
-        this._panel.fillRect(panelX, panelY, panelW, panelH);
-        this._panel.lineStyle(1, 0x334455, 0.8);
-        this._panel.strokeRect(panelX, panelY, panelW, panelH);
-        this._panel.lineStyle(1, 0x1a2a3a, 0.5);
-        this._panel.strokeRect(panelX + 2, panelY + 2, panelW - 4, panelH - 4);
+        this._panel = UITheme.panel(this, panelX, panelY, panelW, panelH, { accent: true });
 
         // Header
-        this.add.text(panelX + panelW / 2, panelY + 16, '— INVENTORY —', {
-            fontSize: '12px', fontFamily: 'Share Tech Mono', color: '#c8a040', letterSpacing: 6,
-        }).setOrigin(0.5);
+        this.add.text(panelX + 36, panelY + 16, 'INVENTAIRE', {
+            fontSize: '20px', fontFamily: UITheme.displayFont, color: '#edf0ed', letterSpacing: 2,
+        });
 
-        this.add.text(panelX + panelW / 2, panelY + 34, 'FORMER S.T.A.R.S.  ·  BARRY BURTON', {
-            fontSize: '8px', fontFamily: 'Share Tech Mono', color: '#334455', letterSpacing: 3,
-        }).setOrigin(0.5);
+        this.add.text(panelX + panelW - 24, panelY + 24, 'BARRY BURTON  /  ÉQUIPEMENT', {
+            fontSize: '12px', fontFamily: UITheme.mono, color: '#9ba8b8', letterSpacing: 3,
+        }).setOrigin(1, 0);
 
         // Divider
         const div = this.add.graphics();
@@ -60,7 +58,7 @@ class InventoryScene extends Phaser.Scene {
 
         // Footer
         this.add.text(panelX + panelW / 2, panelY + panelH - 15, '[I] / [ESC] CLOSE  ·  CLICK — SELECT & ACT  ·  RIGHT-CLICK — MENU', {
-            fontSize: '8px', fontFamily: 'Share Tech Mono', color: '#334455',
+            fontSize: '12px', fontFamily: UITheme.mono, color: '#9ba8b8',
         }).setOrigin(0.5);
 
         // Input
@@ -74,7 +72,7 @@ class InventoryScene extends Phaser.Scene {
             }
         };
 
-        this._escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESCAPE);
+        this._escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
         this._escKey.on('down', closeHandler);
 
         this._iKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.I);
@@ -84,11 +82,11 @@ class InventoryScene extends Phaser.Scene {
     }
 
     _buildInventoryGrid(panelX, panelY, panelW) {
-        const SLOT_SIZE = 48;
+        const SLOT_SIZE = 60;
         const COLS = 6;
         const ROWS = 4;
         const gridX = panelX + 20;
-        const gridY = panelY + 58;
+        const gridY = panelY + 78;
 
         this._slots = [];
         this._slotItems = [];
@@ -103,9 +101,9 @@ class InventoryScene extends Phaser.Scene {
 
                 // Slot background
                 const slotBg = this.add.graphics();
-                slotBg.fillStyle(0x0a1020, 1);
+                slotBg.fillStyle(0x141e2b, 1);
                 slotBg.fillRect(sx, sy, SLOT_SIZE, SLOT_SIZE);
-                slotBg.lineStyle(1, 0x1e2f40, 1);
+                slotBg.lineStyle(1, 0x354252, 1);
                 slotBg.strokeRect(sx, sy, SLOT_SIZE, SLOT_SIZE);
 
                 // Slot data
@@ -131,9 +129,9 @@ class InventoryScene extends Phaser.Scene {
                 });
                 hitZone.on('pointerover', () => {
                     slotBg.clear();
-                    slotBg.fillStyle(0x162030, 1);
+                    slotBg.fillStyle(0x253443, 1);
                     slotBg.fillRect(sx, sy, SLOT_SIZE, SLOT_SIZE);
-                    slotBg.lineStyle(1, 0x4488cc, 0.6);
+                    slotBg.lineStyle(1, 0xd65a54, 0.6);
                     slotBg.strokeRect(sx, sy, SLOT_SIZE, SLOT_SIZE);
                     if (idx < inventory.length) {
                         this._showItemDetail(inventory[idx]);
@@ -142,9 +140,9 @@ class InventoryScene extends Phaser.Scene {
                 hitZone.on('pointerout', () => {
                     const isSelected = this._selectedSlot === idx;
                     slotBg.clear();
-                    slotBg.fillStyle(isSelected ? 0x1a2a3a : 0x0a1020, 1);
+                    slotBg.fillStyle(isSelected ? 0x1a2a3a : 0x141e2b, 1);
                     slotBg.fillRect(sx, sy, SLOT_SIZE, SLOT_SIZE);
-                    slotBg.lineStyle(1, isSelected ? 0x6699cc : 0x1e2f40, 1);
+                    slotBg.lineStyle(1, isSelected ? 0xd65a54 : 0x354252, 1);
                     slotBg.strokeRect(sx, sy, SLOT_SIZE, SLOT_SIZE);
                     // Restore selected slot info when hovering away
                     if (!isSelected && this._selectedSlot >= 0 && this._selectedSlot < inventory.length) {
@@ -163,22 +161,22 @@ class InventoryScene extends Phaser.Scene {
         // Item icon
         if (this.textures.exists(def.icon)) {
             slot.icon = this.add.image(
-                slot.sx + 24, slot.sy + 22, def.icon
+                slot.sx + 30, slot.sy + 25, def.icon
             ).setDisplaySize(32, 32);
         } else {
-            slot.icon = this.add.rectangle(slot.sx + 24, slot.sy + 22, 30, 30, 0x334455);
+            slot.icon = this.add.rectangle(slot.sx + 30, slot.sy + 25, 30, 30, 0x334455);
         }
 
         // Item name (tiny)
-        const nameText = this.add.text(slot.sx + 24, slot.sy + 40, def.name.substring(0, 8), {
-            fontSize: '7px', fontFamily: 'Share Tech Mono', color: '#666660',
+        const nameText = this.add.text(slot.sx + 30, slot.sy + 48, def.name.length > 7 ? def.name.substring(0, 6) + '…' : def.name, {
+            fontSize: '9px', fontFamily: UITheme.font, color: '#aeb9c7',
         }).setOrigin(0.5);
         slot.nameText = nameText;
 
         // Qty
         if (invItem.qty > 1) {
-            slot.qty = this.add.text(slot.sx + 44, slot.sy + 4, `x${invItem.qty}`, {
-                fontSize: '8px', fontFamily: 'Share Tech Mono', color: '#aaaaaa',
+            slot.qty = this.add.text(slot.sx + 55, slot.sy + 4, `x${invItem.qty}`, {
+                fontSize: '12px', fontFamily: UITheme.font, color: '#aaaaaa',
             }).setOrigin(1, 0);
         }
 
@@ -186,62 +184,62 @@ class InventoryScene extends Phaser.Scene {
         const state = SaveSystem.getState();
         if (state?.equippedWeapon === invItem.id) {
             const eqBadge = this.add.text(slot.sx + 4, slot.sy + 4, 'EQ', {
-                fontSize: '7px', fontFamily: 'Share Tech Mono', color: '#ffcc44',
+                fontSize: '11px', fontFamily: UITheme.font, color: '#ffcc44',
             });
             slot.eqBadge = eqBadge;
         }
     }
 
     _buildDetailPanel(panelX, panelY, panelW, panelH) {
-        const detailX = panelX + 20 + 6 * 52 + 20;
-        const detailY = panelY + 58;
+        const detailX = panelX + 20 + 6 * 64 + 20;
+        const detailY = panelY + 78;
         const detailW = panelX + panelW - 20 - detailX;
-        const detailH = 200;
+        const detailH = 278;
 
         const detailBg = this.add.graphics();
         detailBg.fillStyle(0x060c16, 1);
         detailBg.fillRect(detailX, detailY, detailW, detailH);
-        detailBg.lineStyle(1, 0x1e2f40, 0.6);
+        detailBg.lineStyle(1, 0x354252, 0.6);
         detailBg.strokeRect(detailX, detailY, detailW, detailH);
 
         this._detailX = detailX;
         this._detailY = detailY;
         this._detailW = detailW;
 
-        this._detailIcon = this.add.image(detailX + 30, detailY + 30, 'item_handgun')
+        this._detailIcon = this.add.image(detailX + detailW - 35, detailY + 30, 'item_handgun')
             .setDisplaySize(44, 44).setVisible(false);
 
         this._detailName = this.add.text(detailX + 8, detailY + 8, '', {
-            fontSize: '10px', fontFamily: 'Share Tech Mono', color: '#c8a040',
+            fontSize: '12px', fontFamily: UITheme.font, color: '#edf0ed',
         });
         this._detailType = this.add.text(detailX + 8, detailY + 24, '', {
-            fontSize: '8px', fontFamily: 'Share Tech Mono', color: '#556677',
+            fontSize: '12px', fontFamily: UITheme.font, color: '#a8b5c4',
         });
         this._detailDesc = this.add.text(detailX + 8, detailY + 68, '', {
-            fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#888880',
+            fontSize: '11px', fontFamily: UITheme.font, color: '#bdc6d0',
             wordWrap: { width: detailW - 16 }, lineSpacing: 4,
         });
     }
 
     _buildEquipmentDisplay(panelX, panelY, panelW, panelH) {
-        const detailX = panelX + 20 + 6 * 52 + 20;
-        const eqY = panelY + 280;
+        const detailX = panelX + 20 + 6 * 64 + 20;
+        const eqY = panelY + 386;
         const eqW = panelX + panelW - 20 - detailX;
 
         this.add.text(detailX, eqY, 'EQUIPPED', {
-            fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#446677', letterSpacing: 3,
+            fontSize: '11px', fontFamily: UITheme.font, color: '#9ba8b8', letterSpacing: 3,
         });
 
         const weapon = InventorySystem.getEquippedWeapon();
         this.add.text(detailX, eqY + 18, weapon ? weapon.def?.name || weapon.id : '— NONE —', {
-            fontSize: '10px', fontFamily: 'Share Tech Mono', color: weapon ? '#c0b090' : '#334455',
+            fontSize: '12px', fontFamily: UITheme.font, color: weapon ? '#c0b090' : '#334455',
         });
 
         if (weapon) {
             const isMelee = weapon.def?.subtype === 'melee';
             const ammoLabel = isMelee ? 'MELEE' : `AMMO: ${weapon.ammo} / ${weapon.def?.ammoCapacity || 0}`;
             this.add.text(detailX, eqY + 35, ammoLabel, {
-                fontSize: '9px', fontFamily: 'Share Tech Mono', color: isMelee ? '#aaffaa' : '#556677',
+                fontSize: '11px', fontFamily: UITheme.font, color: isMelee ? '#aaffaa' : '#556677',
             });
         }
 
@@ -250,12 +248,12 @@ class InventoryScene extends Phaser.Scene {
         if (state) {
             const pct = state.player.hp / state.player.hpMax;
             this.add.text(detailX, eqY + 60, 'VITALS', {
-                fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#446677', letterSpacing: 3,
+                fontSize: '11px', fontFamily: UITheme.font, color: '#9ba8b8', letterSpacing: 3,
             });
             const statusColor = pct > 0.5 ? '#44cc44' : pct > 0.25 ? '#ffaa00' : '#ff2200';
             const status = pct > 0.75 ? 'FINE' : pct > 0.5 ? 'CAUTION' : pct > 0.25 ? 'DANGER' : 'CRITICAL';
             this.add.text(detailX, eqY + 78, `${state.player.hp}/${state.player.hpMax} — ${status}`, {
-                fontSize: '10px', fontFamily: 'Share Tech Mono', color: statusColor,
+                fontSize: '12px', fontFamily: UITheme.font, color: statusColor,
             });
         }
     }
@@ -275,6 +273,13 @@ class InventoryScene extends Phaser.Scene {
 
     _selectSlot(idx) {
         this._selectedSlot = idx;
+        for (const slot of this._slots) {
+            slot.bg.clear();
+            slot.bg.fillStyle(slot.idx === idx ? 0x253443 : 0x141e2b);
+            slot.bg.fillRect(slot.sx, slot.sy, 60, 60);
+            slot.bg.lineStyle(1, slot.idx === idx ? UITheme.colors.accent : 0x354252);
+            slot.bg.strokeRect(slot.sx, slot.sy, 60, 60);
+        }
         const inventory = InventorySystem.getInventory();
         this._clearActionButtons();
         if (idx < inventory.length) {
@@ -343,9 +348,9 @@ class InventoryScene extends Phaser.Scene {
 
         const bX = this._detailX + 8;
         const bW = this._detailW - 16;
-        const bH = 17;
-        const bGap = 3;
-        const startY = this._detailY + 105;
+        const bH = 24;
+        const bGap = 5;
+        const startY = this._detailY + 144;
         const objs = [];
 
         // Separator line
@@ -367,7 +372,7 @@ class InventoryScene extends Phaser.Scene {
             bg.strokeRect(bX, y, bW, bH);
 
             const btn = this.add.text(bX + bW / 2, y + bH / 2, action.label, {
-                fontSize: '9px', fontFamily: 'Share Tech Mono', color: action.color,
+                fontSize: '11px', fontFamily: UITheme.font, color: action.color,
             }).setOrigin(0.5).setDepth(6).setInteractive({ useHandCursor: true });
 
             btn.on('pointerover', () => {
@@ -468,7 +473,7 @@ class InventoryScene extends Phaser.Scene {
         actions.forEach((action, i) => {
             const ayy = menuY + 8 + i * 26;
             const btn = this.add.text(menuX + 12, ayy, action.label, {
-                fontSize: '10px', fontFamily: 'Share Tech Mono', color: '#c0b898',
+                fontSize: '12px', fontFamily: UITheme.font, color: '#c0b898',
             }).setDepth(101).setInteractive();
 
             btn.on('pointerover', () => btn.setColor('#ffffff'));

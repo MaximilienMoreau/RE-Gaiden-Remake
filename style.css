@@ -1,163 +1,126 @@
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Oswald:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Share+Tech+Mono&family=Oswald:wght@400;600;700&display=swap');
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
-
 html, body {
     width: 100%;
     height: 100%;
-    background: #000;
     overflow: hidden;
-    font-family: 'Share Tech Mono', monospace;
+    background: #080c12;
+    color: #e9edf2;
+    font-family: Inter, Arial, sans-serif;
 }
-
 #game-container {
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
+    height: 100dvh;
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
+    background: radial-gradient(ellipse at 50% 30%, #19212d, #080c12 75%);
 }
-
-/* Loading screen */
+#phaser-game {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#phaser-game canvas {
+    display: block;
+    box-shadow: 0 24px 100px #0009;
+}
 #loading-screen {
     position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: #000;
+    inset: 0;
+    z-index: 100;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    z-index: 100;
-    transition: opacity 1s ease;
+    background: radial-gradient(ellipse at 50% 35%, #1a232f, #080c12 65%);
+    transition: opacity .65s ease;
 }
-
 #loading-screen.hidden {
     opacity: 0;
     pointer-events: none;
 }
-
 .loading-logo {
     text-align: center;
-    margin-bottom: 60px;
+    margin-bottom: 48px;
 }
-
 .umbrella-logo {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    border: 3px solid #c00;
-    margin: 0 auto 20px;
-    position: relative;
-    background: radial-gradient(circle, #1a0000 0%, #000 70%);
-    box-shadow: 0 0 30px #c00;
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 32px;
+    border: 1px solid #d65a5480;
+    transform: rotate(45deg);
+    background: linear-gradient(135deg, #d65a5430, transparent);
 }
-
+.umbrella-logo::before, .umbrella-logo::after {
+    content: '';
+    position: absolute;
+    background: #d65a54;
+}
 .umbrella-logo::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: #c00;
-    transform: translateY(-50%);
-}
-
-.umbrella-logo::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
     left: 50%;
-    width: 3px;
-    background: #c00;
-    transform: translateX(-50%);
+    top: 8px;
+    bottom: 8px;
+    width: 1px;
 }
-
+.umbrella-logo::after {
+    top: 50%;
+    left: 8px;
+    right: 8px;
+    height: 1px;
+}
 .loading-logo h1 {
-    font-family: 'Oswald', sans-serif;
-    font-size: 48px;
-    font-weight: 700;
-    color: #c00;
-    letter-spacing: 12px;
-    text-transform: uppercase;
-    text-shadow: 0 0 20px #c00, 0 0 40px #600;
-}
-
-.loading-logo h2 {
-    font-family: 'Oswald', sans-serif;
-    font-size: 32px;
-    font-weight: 400;
-    color: #888;
-    letter-spacing: 8px;
-    margin-top: -8px;
-}
-
-.loading-logo .subtitle {
     font-size: 12px;
-    color: #555;
-    letter-spacing: 6px;
-    margin-top: 8px;
+    font-weight: 500;
+    color: #d65a54;
+    letter-spacing: .4em;
+    padding-left: .4em;
 }
-
+.loading-logo h2 {
+    font-family: Oswald, Impact, sans-serif;
+    font-size: clamp(64px, 12vw, 96px);
+    line-height: 1.3;
+    font-weight: 600;
+    letter-spacing: .12em;
+    padding-left: .12em;
+    color: #edf0ed;
+}
+.loading-logo .subtitle {
+    margin-top: 12px;
+    font-size: 10px;
+    color: #8995a6;
+    letter-spacing: .3em;
+}
 .loading-bar-container {
-    width: 320px;
-    height: 4px;
-    background: #111;
-    border: 1px solid #333;
-    margin-bottom: 16px;
+    width: min(280px, 70vw);
+    height: 2px;
+    background: #28323e;
+    margin-bottom: 18px;
+    overflow: hidden;
 }
-
 #loading-bar {
+    width: 0;
     height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #600, #c00, #f33);
-    transition: width 0.1s ease;
-    box-shadow: 0 0 10px #c00;
+    background: #d65a54;
+    transition: width .15s ease;
 }
-
 #loading-text {
-    font-size: 11px;
-    color: #555;
-    letter-spacing: 3px;
+    font-family: 'Share Tech Mono', monospace;
+    color: #8995a6;
+    font-size: 10px;
+    letter-spacing: .18em;
 }
-
-/* Phaser canvas */
-#phaser-game {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-#phaser-game canvas {
-    display: block;
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
-    box-shadow: 0 0 60px rgba(0,0,0,0.8);
-}
-
-/* Scanlines overlay */
-#phaser-game::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0,0,0,0.05) 2px,
-        rgba(0,0,0,0.05) 4px
-    );
-    pointer-events: none;
-    z-index: 10;
+@media (prefers-reduced-motion: reduce) {
+    #loading-screen, #loading-bar {
+        transition: none;
+    }
 }
