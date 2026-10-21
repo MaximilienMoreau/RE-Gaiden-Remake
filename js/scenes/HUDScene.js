@@ -24,75 +24,27 @@ class HUDScene extends Phaser.Scene {
     }
 
     _buildHUD(W, H) {
-        // Bottom-left panel: health
-        this._hudPanel = this.add.graphics();
-        this._hudPanel.fillStyle(0x000000, 0.65);
-        this._hudPanel.fillRect(10, H - 80, 200, 70);
-        this._hudPanel.lineStyle(1, 0x223344, 0.7);
-        this._hudPanel.strokeRect(10, H - 80, 200, 70);
-
-        // Character name
-        this._nameText = this.add.text(18, H - 75, 'BARRY BURTON', {
-            fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#c8a040', letterSpacing: 3,
+        const text = (x, y, value, size, color, mono = false) => this.add.text(x, y, value, {
+            fontFamily: mono ? UITheme.mono : UITheme.font, fontSize: `${size}px`, color,
         });
-        this._subtitleText = this.add.text(18, H - 64, 'FORMER S.T.A.R.S.  ·  ANTI-UMBRELLA', {
-            fontSize: '7px', fontFamily: 'Share Tech Mono', color: '#444440',
-        });
-
-        // Health bar bg
+        this._hudPanel = UITheme.panel(this, 24, H - 103, 226, 74, { alpha: 0.88 });
+        this._nameText = text(40, H - 89, 'BARRY BURTON', 11, '#e9edf2');
+        this._subtitleText = text(40, H - 45, 'VITALS', 9, '#96a3b3', true);
         this._hpBg = this.add.graphics();
-        this._hpBg.fillStyle(0x111111, 1);
-        this._hpBg.fillRect(18, H - 52, 140, 10);
-        this._hpBg.lineStyle(1, 0x334455, 1);
-        this._hpBg.strokeRect(18, H - 52, 140, 10);
-
-        // Health bar
+        this._hpBg.fillStyle(0x2b3542).fillRoundedRect(40, H - 66, 194, 4, 2);
         this._hpBar = this.add.graphics();
-
-        // HP text
-        this._hpText = this.add.text(18, H - 38, 'HP: ---', {
-            fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#888880',
-        });
-
-        // Status text
-        this._statusText = this.add.text(18, H - 28, 'FINE', {
-            fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#44cc44', letterSpacing: 2,
-        });
-
-        // Bottom-right: weapon display
-        this._weaponPanel = this.add.graphics();
-        this._weaponPanel.fillStyle(0x000000, 0.65);
-        this._weaponPanel.fillRect(W - 170, H - 70, 160, 60);
-        this._weaponPanel.lineStyle(1, 0x223344, 0.7);
-        this._weaponPanel.strokeRect(W - 170, H - 70, 160, 60);
-
-        this._weaponNameText = this.add.text(W - 162, H - 65, '— NO WEAPON —', {
-            fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#c0b090', letterSpacing: 2,
-        });
-        this._ammoText = this.add.text(W - 162, H - 50, '', {
-            fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#888870',
-        });
+        this._hpText = text(234, H - 45, '', 10, '#bdc6d0', true).setOrigin(1, 0);
+        this._statusText = text(234, H - 89, '', 10, '#85bca8', true).setOrigin(1, 0);
+        this._weaponPanel = UITheme.panel(this, W - 250, H - 103, 226, 74, { alpha: 0.88 });
+        this._weaponNameText = text(W - 234, H - 89, '', 11, '#e9edf2');
+        this._ammoText = text(W - 234, H - 68, '', 15, '#bdc6d0', true);
         this._ammoBarBg = this.add.graphics();
-        this._ammoBarBg.fillStyle(0x111111, 1);
-        this._ammoBarBg.fillRect(W - 162, H - 36, 140, 6);
+        this._ammoBarBg.fillStyle(0x2b3542).fillRect(W - 234, H - 44, 194, 3);
         this._ammoBar = this.add.graphics();
-
-        // Top area: room name & act indicator
-        this._actText = this.add.text(W - 10, 12, '', {
-            fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#334455',
-            letterSpacing: 3,
-        }).setOrigin(1, 0);
-
-        // Controls hint
-        this.add.text(W / 2, H - 8, 'WASD / ARROWS — Move  ·  SHIFT — Run  ·  E — Interact / Pick up  ·  I — Inventory  ·  R — Reload', {
-            fontSize: '7px', fontFamily: 'Share Tech Mono', color: '#4a4a4a', letterSpacing: 1,
-        }).setOrigin(0.5, 1);
-
-        // Danger overlay (flashes red when critical hp)
-        this._dangerOverlay = this.add.graphics();
-        this._dangerOverlay.setAlpha(0);
-        this._dangerOverlay.fillStyle(0xff0000, 0.08);
-        this._dangerOverlay.fillRect(0, 0, W, H);
+        this._actText = text(W - 26, 24, '', 10, '#b5c0cd', true).setOrigin(1, 0);
+        this._controlsHint = text(W / 2, H - 17, '[E] Interagir    [I] Inventaire    [R] Recharger', 10, '#a8b3c0', true).setOrigin(0.5, 1);
+        this._dangerOverlay = this.add.graphics().setAlpha(0);
+        this._dangerOverlay.fillStyle(0xd65a54, 0.08).fillRect(0, 0, W, H);
         this._dangerTween = null;
     }
 
@@ -109,11 +61,11 @@ class HUDScene extends Phaser.Scene {
         const pct = Math.max(0, hp / hpMax);
 
         this._hpBar.clear();
-        const col = pct > 0.5 ? 0x44cc44 : pct > 0.25 ? 0xffaa00 : 0xff2200;
+        const col = pct > 0.5 ? 0x85bca8 : pct > 0.25 ? 0xe0b875 : 0xd65a54;
         this._hpBar.fillStyle(col, 0.9);
-        this._hpBar.fillRect(18, H - 52, Math.floor(140 * pct), 10);
+        this._hpBar.fillRoundedRect(40, H - 66, Math.floor(194 * pct), 4, 2);
 
-        this._hpText.setText(`HP: ${hp} / ${hpMax}`);
+        this._hpText.setText(`${hp} / ${hpMax}`);
 
         let status, statusCol;
         if (pct > 0.75) { status = 'FINE'; statusCol = '#44cc44'; }
@@ -170,13 +122,13 @@ class HUDScene extends Phaser.Scene {
         const reserveAmmo = reserveId ? InventorySystem.getReserveAmmo(reserveId) : 0;
 
         this._ammoText.setText(`${ammo}/${cap}  +${reserveAmmo}`);
-        this._ammoText.setColor(ammo <= 2 ? '#ff4444' : '#888870');
+        this._ammoText.setColor(ammo <= 2 ? '#ff4444' : '#bdc6d0');
 
         // Ammo bar
         this._ammoBar.clear();
         const pct = cap > 0 ? ammo / cap : 0;
         this._ammoBar.fillStyle(pct > 0.33 ? 0x4488cc : 0xff6622, 0.8);
-        this._ammoBar.fillRect(W - 162, H - 36, Math.floor(140 * pct), 6);
+        this._ammoBar.fillRect(W - 234, H - 44, Math.floor(194 * pct), 3);
     }
 
     _updateAct(act) {
@@ -190,7 +142,7 @@ class HUDScene extends Phaser.Scene {
     }
 
     _setHpPanelVisible(visible) {
-        const objs = [this._hudPanel, this._hpBg, this._hpBar, this._hpText, this._statusText, this._nameText, this._subtitleText];
+        const objs = [this._hudPanel, this._hpBg, this._hpBar, this._hpText, this._statusText, this._nameText, this._subtitleText, this._weaponPanel, this._weaponNameText, this._ammoText, this._ammoBarBg, this._ammoBar, this._actText, this._controlsHint];
         objs.forEach(o => o?.setVisible(visible));
     }
 

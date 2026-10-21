@@ -55,6 +55,7 @@ class CombatScene extends Phaser.Scene {
     }
 
     create() {
+        this.scene.bringToTop();
         const W = CONFIG.WIDTH, H = CONFIG.HEIGHT;
 
         this.cameras.main.setBackgroundColor(0x000000);
@@ -87,7 +88,7 @@ class CombatScene extends Phaser.Scene {
     _buildBackground(W, H) {
         // Dark background with atmospheric gradient
         const bg = this.add.graphics();
-        bg.fillGradientStyle(0x000000, 0x000000, 0x0a0510, 0x0a0510, 1);
+        bg.fillGradientStyle(0x17212d, 0x101a26, 0x080c12, 0x080c12, 1);
         bg.fillRect(0, 0, W, H);
 
         // Floor
@@ -161,15 +162,15 @@ class CombatScene extends Phaser.Scene {
         // Enemy name
         this._enemyNameText = this.add.text(centerX, H * 0.72, def.name, {
             fontSize: '13px',
-            fontFamily: 'Share Tech Mono',
+            fontFamily: UITheme.font,
             color: '#888880',
             letterSpacing: 5,
         }).setOrigin(0.5);
 
         // Lore text (flash briefly on entry)
         const loreText = this.add.text(W / 2, H * 0.78, def.loreText || '', {
-            fontSize: '9px',
-            fontFamily: 'Share Tech Mono',
+            fontSize: '11px',
+            fontFamily: UITheme.font,
             color: '#444440',
             wordWrap: { width: W - 100 },
             align: 'center',
@@ -210,8 +211,8 @@ class CombatScene extends Phaser.Scene {
     }
 
     _buildCombatBar(W, H) {
-        const barY = H * 0.85;
-        const barW = W * 0.7;
+        const barY = H * 0.825;
+        const barW = W * 0.46;
         const barH = 40;
         const barX = W / 2 - barW / 2;
 
@@ -260,13 +261,13 @@ class CombatScene extends Phaser.Scene {
 
         // Labels
         this.add.text(barX, barY - 14, 'TARGETING SYSTEM', {
-            fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#446688', letterSpacing: 3,
+            fontSize: '11px', fontFamily: UITheme.font, color: '#9cabbc', letterSpacing: 3,
         });
         this.add.text(barX + barW / 2, barY - 14, 'CRITICAL', {
-            fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#44aa44',
+            fontSize: '11px', fontFamily: UITheme.font, color: '#44aa44',
         }).setOrigin(0.5);
         this.add.text(barX + barW, barY - 14, '[SPACE] FIRE', {
-            fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#446688', letterSpacing: 3,
+            fontSize: '11px', fontFamily: UITheme.font, color: '#9cabbc', letterSpacing: 3,
         }).setOrigin(1);
     }
 
@@ -298,9 +299,10 @@ class CombatScene extends Phaser.Scene {
     }
 
     _buildPlayerStatus(W, H) {
+        UITheme.panel(this, 12, H * 0.80, 190, 112, { alpha: 0.9 });
         // Player HP at bottom left
         this.add.text(20, H * 0.83, 'BARRY', {
-            fontSize: '10px', fontFamily: 'Share Tech Mono', color: '#c8a040', letterSpacing: 3,
+            fontSize: '10px', fontFamily: UITheme.font, color: '#c8a040', letterSpacing: 3,
         });
 
         this._playerHpBarBg = this.add.graphics();
@@ -311,13 +313,13 @@ class CombatScene extends Phaser.Scene {
 
         this._playerHpBar = this.add.graphics();
         this._playerHpText = this.add.text(20, H * 0.835 + 32, '', {
-            fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#888',
+            fontSize: '11px', fontFamily: UITheme.font, color: '#888',
         });
         this._updatePlayerHpDisplay();
 
         // Heal hint
         this.add.text(20, H * 0.84 + 52, '[H] Use Herb/Spray', {
-            fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#335544',
+            fontSize: '11px', fontFamily: UITheme.font, color: '#9ba8b8',
         });
     }
 
@@ -341,7 +343,7 @@ class CombatScene extends Phaser.Scene {
     _buildEnemyHpBar(W, H) {
         const cx = W / 2;
         this.add.text(cx, H * 0.62, this._enemyDef?.name || 'ENEMY', {
-            fontSize: '11px', fontFamily: 'Share Tech Mono', color: '#cc4444', letterSpacing: 4,
+            fontSize: '11px', fontFamily: UITheme.font, color: '#cc4444', letterSpacing: 4,
         }).setOrigin(0.5);
 
         this._enemyHpBarBg = this.add.graphics();
@@ -366,15 +368,16 @@ class CombatScene extends Phaser.Scene {
 
     _buildWeaponDisplay(W, H) {
         const weapon = this._weaponDef;
+        UITheme.panel(this, W - 202, H * 0.80, 190, 112, { alpha: 0.9 });
         const wx = W - 160;
         const wy = H * 0.82;
 
         this.add.text(wx, wy, weapon ? weapon.name : 'NO WEAPON', {
-            fontSize: '10px', fontFamily: 'Share Tech Mono', color: '#c0b090', letterSpacing: 2,
+            fontSize: '11px', fontFamily: UITheme.font, color: '#e2e7ed', wordWrap: { width: 150 },
         });
 
-        this._ammoText = this.add.text(wx, wy + 18, '', {
-            fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#888870',
+        this._ammoText = this.add.text(wx, wy + 42, '', {
+            fontSize: '11px', fontFamily: UITheme.font, color: '#bdc6d0',
         });
         this._updateAmmoDisplay();
     }
@@ -397,12 +400,12 @@ class CombatScene extends Phaser.Scene {
     }
 
     _buildInstructions(W, H) {
-        this._instructionText = this.add.text(W / 2, H * 0.91, 'AIM FOR THE CENTER FOR A CRITICAL HIT', {
-            fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#446688', letterSpacing: 3,
+        this._instructionText = this.add.text(W / 2, H * 0.925, 'AIM FOR THE CENTER FOR A CRITICAL HIT', {
+            fontSize: '11px', fontFamily: UITheme.font, color: '#9cabbc', letterSpacing: 3,
         }).setOrigin(0.5);
 
         this.add.text(W / 2, H * 0.96, 'SPACE / F — Fire  ·  H — Use heal', {
-            fontSize: '8px', fontFamily: 'Share Tech Mono', color: '#4a4a4a', letterSpacing: 1,
+            fontSize: '10px', fontFamily: UITheme.font, color: '#4a4a4a', letterSpacing: 1,
         }).setOrigin(0.5);
     }
 
@@ -673,7 +676,7 @@ class CombatScene extends Phaser.Scene {
         }
         this._combatMsgText = this.add.text(CONFIG.WIDTH / 2, CONFIG.HEIGHT * 0.56, text, {
             fontSize: '14px',
-            fontFamily: 'Share Tech Mono',
+            fontFamily: UITheme.font,
             color: color,
             stroke: '#000000',
             strokeThickness: 4,

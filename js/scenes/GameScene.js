@@ -158,7 +158,12 @@ class GameScene extends Phaser.Scene {
         // Camera
         const mapW = roomDef.tileWidth * CONFIG.TILE_SIZE;
         const mapH = roomDef.tileHeight * CONFIG.TILE_SIZE;
-        this.cameras.main.setBounds(0, 0, mapW, mapH);
+        const viewW = CONFIG.WIDTH / CONFIG.CAMERA.ZOOM;
+        const viewH = CONFIG.HEIGHT / CONFIG.CAMERA.ZOOM;
+        this.cameras.main.setBounds(
+            Math.min(0, (mapW - viewW) / 2), Math.min(0, (mapH - viewH) / 2),
+            Math.max(mapW, viewW), Math.max(mapH, viewH)
+        );
         this.cameras.main.startFollow(this._player, true,
             CONFIG.CAMERA.FOLLOW_LERP, CONFIG.CAMERA.FOLLOW_LERP);
         this.cameras.main.setZoom(CONFIG.CAMERA.ZOOM);
