@@ -27,6 +27,7 @@ const SaveSystem = {
             equippedWeapon: null,
             equippedWeaponAmmo: 0,
             weaponAmmoMap: {},
+            ammoRemainders: {},
             // World state
             flags: {},
             visitedRooms: [],
@@ -115,7 +116,7 @@ const SaveSystem = {
     // PERSISTENCE
     // =========================================================
     save(slot) {
-        if (!this._state) return false;
+        if (!this._state || !this._validSlot(slot)) return false;
         this._state.slot = slot;
         this._state.timestamp = Date.now();
 
@@ -131,10 +132,12 @@ const SaveSystem = {
     },
 
     load(slot) {
+        if (!this._validSlot(slot)) return false;
         try {
             const allSaves = this._loadAll();
-            if (allSaves[slot]) {
+            if (this._validState(allSaves[slot])) {
                 this._state = allSaves[slot];
+                this._state.weaponAmmoMap ||= {};
                 return true;
             }
             return false;
@@ -147,7 +150,7 @@ const SaveSystem = {
     getSaveInfo(slot) {
         try {
             const allSaves = this._loadAll();
-            if (allSaves[slot]) {
+            if (this._validSlot(slot) && this._validState(allSaves[slot])) {
                 const s = allSaves[slot];
                 return {
                     exists: true,
@@ -165,9 +168,31 @@ const SaveSystem = {
         }
     },
 
+    _validSlot(slot) {
+        return Number.isInteger(slot) && slot >= 0 && slot < this.MAX_SLOTS;
+    },
+
+    _validState(state) {
+        if (!state || state.version !== 1 || !state.player || !MAPS[state.player.currentRoom]) return false;
+        const p = state.player;
+        const room = MAPS[p.currentRoom];
+        return Number.isFinite(state.timestamp) && Number.isFinite(p.hp) &&
+            Number.isFinite(p.hpMax) && p.hpMax > 0 && p.hp >= 0 && p.hp <= p.hpMax &&
+            p.position && Number.isInteger(p.position.tx) && Number.isInteger(p.position.ty) &&
+            p.position.tx >= 0 && p.position.tx < room.tileWidth &&
+            p.position.ty >= 0 && p.position.ty < room.tileHeight &&
+            ['inventory', 'itemBox'].every(key => Array.isArray(state[key]) && state[key].every(slot =>
+                slot && Object.values(ITEMS).some(item => item.id === slot.id) &&
+                Number.isInteger(slot.qty) && slot.qty > 0)) &&
+            ['visitedRooms', 'openedDoors'].every(key => Array.isArray(state[key])) &&
+            ['flags', 'defeatedEnemies', 'collectedItems'].every(key => state[key] &&
+                typeof state[key] === 'object' && !Array.isArray(state[key]));
+    },
+
     _loadAll() {
         const raw = localStorage.getItem(this.STORAGE_KEY);
-        return raw ? JSON.parse(raw) : {};
+        const saves = raw ? JSON.parse(raw) : {};
+        return saves && typeof saves === 'object' && !Array.isArray(saves) ? saves : {};
     },
 
     deleteSlot(slot) {

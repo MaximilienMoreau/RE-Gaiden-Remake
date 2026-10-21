@@ -7,6 +7,7 @@ class HUDScene extends Phaser.Scene {
     }
 
     create() {
+        this.events.once('shutdown', this.shutdown, this);
         const W = CONFIG.WIDTH, H = CONFIG.HEIGHT;
 
         // Subscribe to events
@@ -166,9 +167,7 @@ class HUDScene extends Phaser.Scene {
         const ammo = weapon.ammo;
         const cap = weapon.def?.ammoCapacity || 0;
         const reserveId = weapon.def?.ammoType;
-        const reserves = reserveId ? InventorySystem.getItemCount(reserveId) : 0;
-        const ammoDef = reserveId ? (ITEMS[reserveId.toUpperCase()] || Object.values(ITEMS).find(i => i.id === reserveId)) : null;
-        const reserveAmmo = reserves * (ammoDef?.amount || 1);
+        const reserveAmmo = reserveId ? InventorySystem.getReserveAmmo(reserveId) : 0;
 
         this._ammoText.setText(`${ammo}/${cap}  +${reserveAmmo}`);
         this._ammoText.setColor(ammo <= 2 ? '#ff4444' : '#888870');

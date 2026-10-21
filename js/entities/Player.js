@@ -21,6 +21,7 @@ class Player extends Phaser.GameObjects.Container {
 
         scene.add.existing(this);
         scene.physics.add.existing(this);
+        this.body.setCollideWorldBounds(true);
         this.body.setSize(18, 24);
         this.body.setOffset(-9, -8);
 

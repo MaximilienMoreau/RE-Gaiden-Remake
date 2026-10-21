@@ -17,11 +17,33 @@ class GameScene extends Phaser.Scene {
     init(data) {
         this._startRoomId = data?.roomId || 'aft_deck';
         this._fromSave = data?.fromSave || false;
-        this._companionRegistry = []; // companions that follow across rooms
+        this._companionRegistry = [];
+        this._cutsceneTriggers = [];
+        this._bossTriggers = [];
+        this._entryLockPos = null;
+        this._transitionCooldown = 0;
+        this._isBusy = false;
+        const state = SaveSystem.getState();
+        if (state && (SaveSystem.getFlag(CONFIG.FLAGS.ACT1_LEON_FOUND) ||
+            MAPS.restaurant_hall.objects.some((o, i) => o.npcId === 'leon' &&
+                SaveSystem.getFlag(`npc_spoken_restaurant_hall_${i}`)))) {
+            this._companionRegistry.push({ npcId: 'leon', companionDialogueId: 'leon_companion' });
+        }
+        if (SaveSystem.getFlag(CONFIG.FLAGS.ACT2_LUCIA_LOCATED)) {
+            this._companionRegistry.push({ npcId: 'lucia_first_meeting', companionDialogueId: 'lucia_ambient' });
+        }
     }
 
     create() {
         this._bindEvents();
+        this.events.once('shutdown', () => {
+            for (const [event, handler] of [
+                ['player_interact', this._onPlayerInteract], ['open_inventory', this._onOpenInventory],
+                ['player_reload', this._onReload], ['combat_triggered', this._onCombatTriggered],
+                ['enemy_killed', this._onEnemyKilled], ['combat_finished', this._onCombatFinished],
+                ['player_dead', this._onPlayerDead], ['dialogue_closed', this._onDialogueClosed],
+            ]) EventSystem.off(event, handler);
+        });
 
         // Init save state if needed
         if (!SaveSystem.getState()) {
@@ -81,6 +103,8 @@ class GameScene extends Phaser.Scene {
     _loadRoom(roomId, entryTx, entryTy, immediate = false) {
         this._isBusy = true;
         this._clearRoom();
+        this._cutsceneTriggers = [];
+        this._bossTriggers = [];
 
         const roomDef = MAPS[roomId];
         if (!roomDef) {
@@ -123,8 +147,9 @@ class GameScene extends Phaser.Scene {
         this._spawnConnectionDoors(roomDef);
 
         // Spawn player
-        const spawnTx = entryTx ?? this._getDefaultSpawn(roomDef).tx;
-        const spawnTy = entryTy ?? this._getDefaultSpawn(roomDef).ty;
+        const spawn = immediate && this._fromSave ? state.player.position : this._getDefaultSpawn(roomDef);
+        const spawnTx = entryTx ?? spawn.tx;
+        const spawnTy = entryTy ?? spawn.ty;
         this._spawnPlayer(spawnTx, spawnTy);
 
         // Respawn persistent companions at entry point
@@ -478,7 +503,6 @@ class GameScene extends Phaser.Scene {
             if (dist < S * 0.8) {
                 if (conn.locked && !SaveSystem.isDoorOpen(conn.doorId)) {
                     if (conn.keyId && InventorySystem.hasItem(conn.keyId)) {
-                        InventorySystem.removeItem(conn.keyId);
                         SaveSystem.markDoorOpened(conn.doorId);
                         const keyDef = ITEMS[conn.keyId?.toUpperCase()] || Object.values(ITEMS).find(i => i.id === conn.keyId);
                         this._showFloatingMessage(`${keyDef?.name || 'Key'} used.`, '#88cc88');
@@ -787,7 +811,6 @@ class GameScene extends Phaser.Scene {
         if (data.locked) {
             // Check if player has the key
             if (data.keyId && InventorySystem.hasItem(data.keyId)) {
-                InventorySystem.removeItem(data.keyId);
                 SaveSystem.markDoorOpened(data.doorId);
                 obj.data2.locked = false;
                 obj.open();
@@ -873,7 +896,10 @@ class GameScene extends Phaser.Scene {
         // Declare escKey early so close() can reference it for cleanup.
         const escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
 
+        let closed = false;
         const close = () => {
+            if (closed) return;
+            closed = true;
             this.input.keyboard.removeKey(escKey);
             uiRefs.forEach(r => r.destroy());
             this._isBusy = false;
@@ -944,7 +970,10 @@ class GameScene extends Phaser.Scene {
         const uiRefs = [overlay, panel, header];
 
         const escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+        let closed = false;
         const close = () => {
+            if (closed) return;
+            closed = true;
             this.input.keyboard.removeKey(escKey);
             uiRefs.forEach(r => r.destroy());
             this._isBusy = false;
@@ -1101,8 +1130,12 @@ class GameScene extends Phaser.Scene {
                 if (data.isBoss) {
                     SaveSystem.setFlag(`boss_defeated_${data.enemyId}`);
                     if (data.enemyId === 'creature_p2') {
+                        SaveSystem.setFlag('boss_defeated_creature_p1');
                         isFinalBossVictory = true;
-                        this.time.delayedCall(1500, () => this._triggerCutscene('act4_lucia_saves_leon'));
+                        this.time.delayedCall(1500, () => {
+                            this._isBusy = false;
+                            this._triggerCutscene('act4_lucia_saves_leon');
+                        });
                     }
                 }
             }
@@ -1123,6 +1156,7 @@ class GameScene extends Phaser.Scene {
     }
 
     _onPlayerDead() {
+        this._isBusy = true;
         this._player?.lockInput(true);
         this.time.delayedCall(1500, () => {
             AudioSynth.stopBgm();
@@ -1167,7 +1201,15 @@ class GameScene extends Phaser.Scene {
         this._isBusy = false;
         this._player?.lockInput(false);
 
+        if (data.dialogueId === 'act4_real_leon_identified') {
+            SaveSystem.setFlag(CONFIG.FLAGS.ACT4_REAL_LEON_SAVED);
+            this._onCombatTriggered({ enemyId: 'creature_p1', enemyIndex: -99,
+                roomId: this._currentRoomId, isBoss: true });
+            return;
+        }
+
         if (data.dialogueId === 'act1_leon_first_meeting') {
+            SaveSystem.setFlag(CONFIG.FLAGS.ACT1_LEON_FOUND);
             const leon = this._npcs.find(n => n.npcId === 'leon');
             if (leon) {
                 leon.isFollowing = true;
@@ -1310,7 +1352,7 @@ class GameScene extends Phaser.Scene {
     // PROXIMITY INTERACTIONS (NPC prompts, cutscene triggers)
     // =========================================================
     _updateProximityObjects() {
-        if (!this._player) return;
+        if (!this._player || this._isBusy) return;
         const px = this._player.x, py = this._player.y;
 
         // NPC prompts
@@ -1328,6 +1370,7 @@ class GameScene extends Phaser.Scene {
                 if (dist < trig.radius) {
                     trig.triggered = true;
                     this._triggerCutscene(trig.cutsceneId);
+                    return;
                 }
             }
         }
@@ -1341,7 +1384,7 @@ class GameScene extends Phaser.Scene {
                     trig.triggered = true;
                     if (trig.cutsceneId && !SaveSystem.getFlag(`cs_${trig.cutsceneId}`)) {
                         this._triggerCutscene(trig.cutsceneId);
-                    } else {
+                    } else if (trig.bossId !== 'creature_p1') {
                         EventSystem.emit('combat_triggered', {
                             enemyId: trig.bossId,
                             enemyIndex: -1,
@@ -1423,17 +1466,8 @@ class GameScene extends Phaser.Scene {
     _resolveTwoLeonsChoice(choseCorrectly) {
         if (choseCorrectly) {
             // Player correctly identified real Leon
+            this._isBusy = false;
             this._triggerCutscene('act4_real_leon_identified');
-            this.time.delayedCall(3000, () => {
-                // Trigger final boss
-                SaveSystem.setFlag(CONFIG.FLAGS.ACT4_REAL_LEON_SAVED);
-                EventSystem.emit('combat_triggered', {
-                    enemyId: 'creature_p1',
-                    enemyIndex: -99,
-                    roomId: this._currentRoomId,
-                    isBoss: true,
-                });
-            });
         } else {
             // Wrong choice - player must try again after cutscene
             const msg = this.add.text(CONFIG.WIDTH / 2, CONFIG.HEIGHT / 2, 'The creature attacks!', {
@@ -1460,9 +1494,20 @@ class GameScene extends Phaser.Scene {
     update(time, delta) {
         if (!this._player) return;
 
+        if (this._isBusy) {
+            this._player.body.setVelocity(0, 0);
+            for (const actor of [...this._enemies, ...this._npcs]) actor.body?.setVelocity(0, 0);
+            return;
+        }
         this._player.update(time, delta);
+        SaveSystem.getState().player.position = {
+            tx: Math.floor(this._player.x / CONFIG.TILE_SIZE),
+            ty: Math.floor(this._player.y / CONFIG.TILE_SIZE),
+        };
+        if (this._isBusy) return;
         this._updateProximityObjects();
         this._checkRoomTransitions();
+        if (this._isBusy) return;
 
         // Enemy AI
         for (const enemy of this._enemies) {

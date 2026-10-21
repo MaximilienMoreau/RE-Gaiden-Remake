@@ -112,13 +112,12 @@ class GameOverScene extends Phaser.Scene {
                 if (action === 'continue') {
                     // Try to load most recent save
                     let loaded = false;
-                    for (let i = 0; i < CONFIG.SAVE_SLOT_COUNT; i++) {
-                        const info = SaveSystem.getSaveInfo(i);
-                        if (info.exists) {
-                            SaveSystem.load(i);
-                            loaded = true;
-                            break;
-                        }
+                    const slots = Array.from({ length: CONFIG.SAVE_SLOT_COUNT }, (_, slot) =>
+                        ({ slot, info: SaveSystem.getSaveInfo(slot) }))
+                        .filter(entry => entry.info.exists)
+                        .sort((a, b) => b.info.timestamp - a.info.timestamp);
+                    for (const { slot } of slots) {
+                        if (SaveSystem.load(slot)) { loaded = true; break; }
                     }
                     if (loaded) {
                         AudioSynth.playBgm('tension');

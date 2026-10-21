@@ -12,6 +12,8 @@ class DialogueScene extends Phaser.Scene {
     }
 
     init(data) {
+        this._closing = false;
+        this._canAdvance = false;
         this._dialogueId = data.dialogueId;
         this._singleText = data.singleText;
         this._npcId = data.npcId;
@@ -20,6 +22,7 @@ class DialogueScene extends Phaser.Scene {
     }
 
     create() {
+        this.events.once('shutdown', this.shutdown, this);
         const W = CONFIG.WIDTH, H = CONFIG.HEIGHT;
 
         // Prepare lines
@@ -186,6 +189,7 @@ class DialogueScene extends Phaser.Scene {
     }
 
     _advance() {
+        if (this._closing) return;
         if (!this._canAdvance) {
             // Skip typewriter
             if (this._typeInterval) {
@@ -208,11 +212,15 @@ class DialogueScene extends Phaser.Scene {
     }
 
     _closeDialogue() {
+        if (this._closing) return;
+        this._closing = true;
+        if (this._typeInterval) clearInterval(this._typeInterval);
+        this._typeInterval = null;
         this.cameras.main.fadeOut(200, 0, 0, 0, (cam, progress) => {
             if (progress === 1) {
                 this.scene.stop();
-                if (this._onComplete) this._onComplete();
                 EventSystem.emit('dialogue_closed', { dialogueId: this._dialogueId });
+                if (this._onComplete) this._onComplete();
             }
         });
     }
