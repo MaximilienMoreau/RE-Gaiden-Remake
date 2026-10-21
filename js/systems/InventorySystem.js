@@ -19,39 +19,46 @@ const InventorySystem = {
         const def = ITEMS[itemId.toUpperCase()] || Object.values(ITEMS).find(i => i.id === itemId);
         if (!def) return false;
 
-        // Try to stack
-        if (def.stackable) {
-            const existing = state.inventory.find(s => s.id === def.id && s.qty < (def.maxStack || 99));
-            if (existing) {
-                existing.qty = Math.min((existing.qty || 1) + quantity, def.maxStack || 99);
-                return true;
-            }
+        if (!Number.isInteger(quantity) || quantity <= 0) return false;
+        const maxStack = def.stackable ? (def.maxStack || 99) : 1;
+        const freeInStacks = state.inventory.reduce((n, slot) =>
+            n + (slot.id === def.id ? Math.max(0, maxStack - slot.qty) : 0), 0);
+        const newSlots = Math.ceil(Math.max(0, quantity - freeInStacks) / maxStack);
+        if (state.inventory.length + newSlots > CONFIG.MAX_INVENTORY_SLOTS) return false;
+        let remaining = quantity;
+        for (const slot of state.inventory) {
+            if (slot.id !== def.id) continue;
+            const added = Math.min(remaining, Math.max(0, maxStack - slot.qty));
+            slot.qty += added;
+            remaining -= added;
         }
-
-        // Check capacity
-        if (state.inventory.length >= CONFIG.MAX_INVENTORY_SLOTS) return false;
-
-        state.inventory.push({
-            id: def.id,
-            qty: quantity,
-        });
+        while (remaining > 0) {
+            const qty = Math.min(remaining, maxStack);
+            state.inventory.push({ id: def.id, qty });
+            remaining -= qty;
+        }
         return true;
     },
 
     removeItem(itemId, quantity = 1) {
         const state = SaveSystem.getState();
-        if (!state) return false;
-        const idx = state.inventory.findIndex(s => s.id === itemId);
-        if (idx === -1) return false;
-        const slot = state.inventory[idx];
-        slot.qty = (slot.qty || 1) - quantity;
-        if (slot.qty <= 0) {
-            state.inventory.splice(idx, 1);
-            // Unequip if needed
-            if (state.equippedWeapon === itemId) {
-                state.equippedWeapon = null;
-                state.equippedWeaponAmmo = 0;
-            }
+        if (!state || !Number.isInteger(quantity) || quantity <= 0 ||
+            this.getItemCount(itemId) < quantity) return false;
+        let remaining = quantity;
+        for (let i = 0; i < state.inventory.length && remaining > 0;) {
+            const slot = state.inventory[i];
+            if (slot.id !== itemId) { i++; continue; }
+            const removed = Math.min(remaining, slot.qty);
+            slot.qty -= removed;
+            remaining -= removed;
+            if (slot.qty === 0) state.inventory.splice(i, 1);
+            else i++;
+        }
+        if (!this.hasItem(itemId) && state.equippedWeapon === itemId) {
+            state.weaponAmmoMap ||= {};
+            state.weaponAmmoMap[itemId] = state.equippedWeaponAmmo;
+            state.equippedWeapon = null;
+            state.equippedWeaponAmmo = 0;
         }
         return true;
     },
@@ -63,8 +70,7 @@ const InventorySystem = {
 
     getItemCount(itemId) {
         const inv = this.getInventory();
-        const slot = inv.find(s => s.id === itemId);
-        return slot ? (slot.qty || 1) : 0;
+        return inv.reduce((count, slot) => count + (slot.id === itemId ? slot.qty : 0), 0);
     },
 
     // Equip a weapon — preserves each weapon's loaded chamber across switches.
@@ -72,7 +78,8 @@ const InventorySystem = {
         const state = SaveSystem.getState();
         if (!state) return false;
         const def = this._getDef(itemId);
-        if (!def || def.type !== 'weapon') return false;
+        if (!def || def.type !== 'weapon' || !this.hasItem(itemId)) return false;
+        if (state.equippedWeapon === itemId) return true;
 
         if (!state.weaponAmmoMap) state.weaponAmmoMap = {};
 
@@ -87,20 +94,7 @@ const InventorySystem = {
         if (state.weaponAmmoMap[itemId] !== undefined) {
             state.equippedWeaponAmmo = state.weaponAmmoMap[itemId];
         } else {
-            const ammoDef = this._getDef(def.ammoType);
-            if (ammoDef) {
-                const bulletsPerBox = ammoDef.amount || 1;
-                const availableBoxes = this.getItemCount(def.ammoType);
-                const toLoad = Math.min(availableBoxes * bulletsPerBox, def.ammoCapacity);
-                if (toLoad > 0) {
-                    this.removeItem(def.ammoType, Math.min(availableBoxes, Math.ceil(toLoad / bulletsPerBox)));
-                    state.equippedWeaponAmmo = toLoad;
-                } else {
-                    state.equippedWeaponAmmo = 0;
-                }
-            } else {
-                state.equippedWeaponAmmo = 0;
-            }
+            state.equippedWeaponAmmo = this._takeReserveAmmo(def.ammoType, def.ammoCapacity || 0);
             state.weaponAmmoMap[itemId] = state.equippedWeaponAmmo;
         }
 
@@ -136,14 +130,8 @@ const InventorySystem = {
         if (!def || !def.ammoType) return false;
         const needed = def.ammoCapacity - state.equippedWeaponAmmo;
         if (needed <= 0) return false;
-        const availableBoxes = this.getItemCount(def.ammoType);
-        if (availableBoxes <= 0) return false;
-        // Convert boxes → bullets so we load the correct number of rounds.
-        const ammoDef = this._getDef(def.ammoType);
-        const bulletsPerBox = ammoDef?.amount || 1;
-        const bulletsToLoad = Math.min(needed, availableBoxes * bulletsPerBox);
-        const boxesToUse = Math.min(availableBoxes, Math.ceil(bulletsToLoad / bulletsPerBox));
-        this.removeItem(def.ammoType, boxesToUse);
+        const bulletsToLoad = this._takeReserveAmmo(def.ammoType, needed);
+        if (bulletsToLoad <= 0) return false;
         state.equippedWeaponAmmo += bulletsToLoad;
         if (!state.weaponAmmoMap) state.weaponAmmoMap = {};
         state.weaponAmmoMap[state.equippedWeapon] = state.equippedWeaponAmmo;
@@ -151,14 +139,34 @@ const InventorySystem = {
         return true;
     },
 
+    getReserveAmmo(itemId) {
+        const state = SaveSystem.getState();
+        return this.getItemCount(itemId) * (this._getDef(itemId)?.amount || 1) +
+            (state?.ammoRemainders?.[itemId] || 0);
+    },
+
+    _takeReserveAmmo(itemId, needed) {
+        const state = SaveSystem.getState();
+        if (!state || !itemId || needed <= 0) return 0;
+        state.ammoRemainders ||= {};
+        const loose = state.ammoRemainders[itemId] || 0;
+        const toLoad = Math.min(needed, this.getReserveAmmo(itemId));
+        const perBox = this._getDef(itemId)?.amount || 1;
+        const boxes = Math.ceil(Math.max(0, toLoad - loose) / perBox);
+        if (boxes > 0) this.removeItem(itemId, boxes);
+        state.ammoRemainders[itemId] = loose + boxes * perBox - toLoad;
+        return toLoad;
+    },
+
     // Use a healing item
     useHealItem(itemId) {
         const def = this._getDef(itemId);
         if (!def || def.type !== 'heal') return false;
         const state = SaveSystem.getState();
-        if (!state) return false;
+        if (!state || !this.hasItem(itemId)) return false;
+        if (def.healAmount <= 0 && !(def.curesPoison && state.flags.poisoned)) return false;
+        if (state.player.hp >= state.player.hpMax && !(def.curesPoison && state.flags.poisoned)) return false;
         this.removeItem(itemId);
-        const healed = Math.min(def.healAmount, state.player.hpMax - state.player.hp);
         state.player.hp = Math.min(state.player.hp + def.healAmount, state.player.hpMax);
         if (def.curesPoison) {
             state.flags['poisoned'] = false;
@@ -172,6 +180,7 @@ const InventorySystem = {
         const def1 = this._getDef(itemId1);
         if (!def1 || !def1.combinable) return null;
         if (!def1.combinable.includes(itemId2)) return null;
+        if (!this.hasItem(itemId1) || !this.hasItem(itemId2)) return null;
 
         this.removeItem(itemId1);
         this.removeItem(itemId2);
@@ -203,7 +212,7 @@ const InventorySystem = {
         const idx = state.itemBox.findIndex(s => s.id === itemId);
         if (idx === -1) return false;
         if (!this.addItem(itemId)) return false;
-        state.itemBox.splice(idx, 1);
+        if (--state.itemBox[idx].qty <= 0) state.itemBox.splice(idx, 1);
         return true;
     },
 

@@ -65,6 +65,7 @@ class InventoryScene extends Phaser.Scene {
 
         // Input
         const closeHandler = () => {
+            if (this.scene.isActive(CONFIG.SCENES.DIALOGUE)) return;
             if (this._contextMenu) {
                 this._contextMenu.forEach(o => o.destroy());
                 this._contextMenu = null;
@@ -335,7 +336,7 @@ class InventoryScene extends Phaser.Scene {
                 });
             }});
         }
-        actions.push({ label: 'DISCARD', color: '#cc6666', fn: () => {
+        if (def.type !== 'key') actions.push({ label: 'DISCARD', color: '#cc6666', fn: () => {
             InventorySystem.removeItem(def.id);
             this._close();
         }});
@@ -447,7 +448,7 @@ class InventoryScene extends Phaser.Scene {
                 });
             }});
         }
-        actions.push({ label: 'DISCARD', fn: () => {
+        if (def.type !== 'key') actions.push({ label: 'DISCARD', fn: () => {
             InventorySystem.removeItem(def.id);
             this._close();
         }});
