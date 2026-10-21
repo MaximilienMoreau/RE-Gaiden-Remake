@@ -10,6 +10,9 @@ class TitleScene extends Phaser.Scene {
     }
 
     create() {
+        this._menuItems = [];
+        this._menuIndex = 0;
+        this._canInput = false;
         const W = CONFIG.WIDTH, H = CONFIG.HEIGHT;
 
         this._buildBackground(W, H);
@@ -35,28 +38,35 @@ class TitleScene extends Phaser.Scene {
     // ─── BACKGROUND ──────────────────────────────────────────────────────────
 
     _buildBackground(W, H) {
-        this.add.rectangle(W / 2, H / 2, W, H, 0x000000);
-
-        // Subtle grid
-        const grid = this.add.graphics();
-        grid.lineStyle(1, 0x07100a, 0.35);
-        for (let x = 0; x < W; x += 32) {
-            grid.beginPath(); grid.moveTo(x, 0); grid.lineTo(x, H); grid.strokePath();
+        const bg = this.add.graphics();
+        bg.fillGradientStyle(0x182432, 0x101a28, 0x080c12, 0x080c12, 1);
+        bg.fillRect(0, 0, W, H);
+        // A cold moon, distant ship and reflected navigation lights.
+        if (!this.textures.exists('title_moon_glow')) {
+            const texture = this.textures.createCanvas('title_moon_glow', 256, 256);
+            const ctx = texture.getContext();
+            const gradient = ctx.createRadialGradient(128, 128, 16, 128, 128, 128);
+            gradient.addColorStop(0, 'rgba(158,175,191,0.14)');
+            gradient.addColorStop(1, 'rgba(158,175,191,0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 256, 256);
+            texture.refresh();
         }
-        for (let y = 0; y < H; y += 32) {
-            grid.beginPath(); grid.moveTo(0, y); grid.lineTo(W, y); grid.strokePath();
-        }
-
+        this.add.image(W * 0.76, H * 0.22, 'title_moon_glow');
+        bg.fillStyle(0xc6cdd2, 0.65);
+        bg.fillCircle(W * 0.76, H * 0.22, 25);
         this._drawShipSilhouette(W, H);
-
-        // Red horizon fog
-        const fog = this.add.graphics();
-        fog.fillGradientStyle(0x000000, 0x000000, 0x180000, 0x180000, 0.0, 0.0, 1.0, 1.0);
-        fog.fillRect(0, H * 0.55, W, H * 0.22);
-
-        // Deep water
-        fog.fillStyle(0x010204, 1);
-        fog.fillRect(0, H * 0.79, W, H * 0.21);
+        const shade = this.add.graphics();
+        shade.fillGradientStyle(0x080c12, 0x080c12, 0x080c12, 0x080c12, 0.98, 0.05, 1, 0.15);
+        shade.fillRect(0, 0, W, H);
+        shade.lineStyle(1, 0x536170, 0.3);
+        shade.lineBetween(48, 48, W - 48, 48);
+        this.add.text(48, 27, 'USSTRATCOM  /  OPERATION STARLIGHT', {
+            fontFamily: UITheme.mono, fontSize: '10px', color: '#8f9ba9', letterSpacing: 2,
+        });
+        this.add.text(W - 48, 27, 'SIGNAL LOST', {
+            fontFamily: UITheme.mono, fontSize: '10px', color: '#d65a54', letterSpacing: 2,
+        }).setOrigin(1, 0);
     }
 
     _drawShipSilhouette(W, H) {
@@ -126,39 +136,20 @@ class TitleScene extends Phaser.Scene {
     // ─── TITLE BLOCK ─────────────────────────────────────────────────────────
 
     _buildTitleBlock(W, H) {
-        this._drawUmbrellaLogo(W * 0.5, H * 0.11, 34);
-
-        // Rule under logo
-        const r1 = this.add.graphics();
-        r1.lineStyle(1, 0x550000, 0.5);
-        r1.beginPath(); r1.moveTo(W * 0.5 - 200, H * 0.195); r1.lineTo(W * 0.5 + 200, H * 0.195); r1.strokePath();
-
-        // "RESIDENT EVIL"
-        this.add.text(W / 2, H * 0.225, 'R E S I D E N T   E V I L', {
-            fontSize: '16px', fontFamily: 'Share Tech Mono, monospace',
-            color: '#880000', letterSpacing: 3,
-        }).setOrigin(0.5);
-
-        // "GAIDEN"
-        const gaiden = this.add.text(W / 2, H * 0.35, 'GAIDEN', {
-            fontSize: '76px', fontFamily: 'Oswald, Impact, sans-serif',
-            fontStyle: 'bold', color: '#cc1100', letterSpacing: 16,
-            stroke: '#000000', strokeThickness: 8,
-            shadow: { offsetX: 0, offsetY: 0, color: '#ff0000', blur: 24, fill: true },
-        }).setOrigin(0.5).setAlpha(0);
-
-        this.tweens.add({ targets: gaiden, alpha: 1, duration: 1400, ease: 'Power2' });
-
-        // "REMAKE"
-        this.add.text(W / 2, H * 0.475, '—   R E M A K E   —', {
-            fontSize: '12px', fontFamily: 'Share Tech Mono, monospace',
-            color: '#3a3a38', letterSpacing: 6,
-        }).setOrigin(0.5);
-
-        // Rule under subtitle
-        const r2 = this.add.graphics();
-        r2.lineStyle(1, 0x280000, 0.4);
-        r2.beginPath(); r2.moveTo(W * 0.5 - 110, H * 0.51); r2.lineTo(W * 0.5 + 110, H * 0.51); r2.strokePath();
+        this.add.text(64, 119, 'RESIDENT EVIL', {
+            fontSize: '14px', fontFamily: UITheme.font, color: '#d65a54', letterSpacing: 6,
+        });
+        const title = this.add.text(58, 137, 'GAIDEN', {
+            fontSize: '100px', fontFamily: UITheme.displayFont, fontStyle: 'bold',
+            color: '#eef0ed', letterSpacing: 8,
+        }).setAlpha(0);
+        this.tweens.add({ targets: title, alpha: 1, duration: 1100 });
+        this.add.text(65, 276, 'THE STARLIGHT INCIDENT', {
+            fontSize: '11px', fontFamily: UITheme.mono, color: '#99a5b4', letterSpacing: 3,
+        });
+        this.add.text(65, 308, 'Un navire à la dérive.\nAucun signal. Aucun retour.', {
+            fontSize: '14px', fontFamily: UITheme.font, color: '#b0bac7', lineSpacing: 7,
+        });
     }
 
     _drawUmbrellaLogo(cx, cy, r) {
@@ -192,117 +183,54 @@ class TitleScene extends Phaser.Scene {
     // ─── MENU PANEL ──────────────────────────────────────────────────────────
 
     _buildMenuPanel(W, H) {
-        const panelW = 300;
-        const panelH = 168;
-        const panelX = W / 2 - panelW / 2;
-        const panelY = H * 0.545;
-
-        // Panel background + border
-        const panel = this.add.graphics();
-        panel.fillStyle(0x020406, 0.95);
-        panel.fillRect(panelX, panelY, panelW, panelH);
-        panel.lineStyle(1, 0x2a0000, 0.9);
-        panel.strokeRect(panelX, panelY, panelW, panelH);
-
-        // Corner accents
-        const cL = 13;
-        panel.lineStyle(2, 0x880000, 0.9);
-        [ [panelX, panelY, 1, 1], [panelX + panelW, panelY, -1, 1],
-          [panelX, panelY + panelH, 1, -1], [panelX + panelW, panelY + panelH, -1, -1] ]
-        .forEach(([px, py, dx, dy]) => {
-            panel.beginPath();
-            panel.moveTo(px, py + dy * cL); panel.lineTo(px, py); panel.lineTo(px + dx * cL, py);
-            panel.strokePath();
-        });
-
+        const x = 64, y = 391, width = 324;
         const items = [
-            { label: 'NOUVELLE PARTIE', action: 'new_game' },
-            { label: 'CHARGER',         action: 'load_game' },
-            { label: 'OPTIONS',          action: 'options' },
+            { label: 'Nouvelle partie', action: 'new_game' },
+            { label: 'Charger une partie', action: 'load_game' },
+            { label: 'Options & commandes', action: 'options' },
         ];
-
-        const itemStartY = panelY + 34;
-        const spacing = 44;
-
         items.forEach((item, i) => {
-            const cy = itemStartY + i * spacing;
-
-            // Selector bar
-            const bar = this.add.graphics();
-            bar.fillStyle(0xcc0000, 0.10);
-            bar.fillRect(panelX + 6, cy - 16, panelW - 12, 32);
-            bar.lineStyle(1, 0x770000, 0.5);
-            bar.strokeRect(panelX + 6, cy - 16, panelW - 12, 32);
-            bar.setVisible(i === 0);
-
-            // Brackets
-            const bL = this.add.text(panelX + 22, cy, '[', {
-                fontSize: '15px', fontFamily: 'Share Tech Mono', color: '#880000',
-            }).setOrigin(0, 0.5).setVisible(i === 0);
-            const bR = this.add.text(panelX + panelW - 22, cy, ']', {
-                fontSize: '15px', fontFamily: 'Share Tech Mono', color: '#880000',
-            }).setOrigin(1, 0.5).setVisible(i === 0);
-
-            // Label
-            const label = this.add.text(W / 2, cy, item.label, {
-                fontSize: '13px', fontFamily: 'Share Tech Mono, monospace',
-                color: i === 0 ? '#e0d8c8' : '#484840', letterSpacing: 3,
-            }).setOrigin(0.5, 0.5);
-
+            const cy = y + i * 49;
+            const bar = UITheme.panel(this, x, cy - 19, width, 42, { alpha: 0.95 });
+            const bL = this.add.rectangle(x + 1, cy + 2, 3, 24, UITheme.colors.accent);
+            const bR = this.add.text(x + width - 22, cy + 1, '→', {
+                fontFamily: UITheme.font, fontSize: '18px', color: '#e9edf2',
+            }).setOrigin(0.5);
+            const label = this.add.text(x + 20, cy + 1, item.label, {
+                fontSize: '15px', fontFamily: UITheme.font, color: '#e9edf2',
+            }).setOrigin(0, 0.5);
+            const hit = this.add.zone(x + width / 2, cy + 2, width, 42).setInteractive({ useHandCursor: true });
+            hit.on('pointerover', () => {
+                if (this._canInput) this._updateMenuSelection(i);
+            });
+            hit.on('pointerdown', () => {
+                if (!this._canInput) return;
+                this._updateMenuSelection(i);
+                this._canInput = false;
+                AudioSynth.sfx('menu_confirm');
+                this._executeAction(item.action);
+            });
             this._menuItems.push({ bar, bL, bR, label, action: item.action });
         });
-
         this._updateMenuSelection(0);
     }
 
     // ─── FOOTER ──────────────────────────────────────────────────────────────
 
     _buildFooter(W, H) {
-        this.add.text(W / 2, H - 40, '↑ ↓  /  W S  —  Navigate     ENTER  —  Confirm', {
-            fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#242420', letterSpacing: 2,
-        }).setOrigin(0.5);
-
-        this.add.text(W / 2, H - 22, 'U S S T R A T C O M   ·   O P E R A T I O N   S T A R L I G H T   ·   C L A S S I F I E D', {
-            fontSize: '8px', fontFamily: 'Share Tech Mono', color: '#171512', letterSpacing: 2,
-        }).setOrigin(0.5);
+        this.add.text(64, H - 43, '↑ ↓  NAVIGUER     ↵  CONFIRMER', {
+            fontSize: '10px', fontFamily: UITheme.mono, color: '#8f9ba9', letterSpacing: 1,
+        });
+        this.add.text(W - 48, H - 43, 'FAN REMAKE  /  2001 — 2026', {
+            fontSize: '10px', fontFamily: UITheme.mono, color: '#738191',
+        }).setOrigin(1, 0);
     }
 
-    // ─── ATMOSPHERE ──────────────────────────────────────────────────────────
-
     _setupAtmosphere(W, H) {
-        // Slow scanline
-        const scanline = this.add.graphics();
-        scanline.fillStyle(0xffffff, 0.012);
-        scanline.fillRect(0, 0, W, 4);
-        this.tweens.add({ targets: scanline, y: { from: 0, to: H }, duration: 5500, repeat: -1, ease: 'Linear' });
-
-        // Occasional red glitch flicker near GAIDEN
-        const flick = this.add.graphics();
-        flick.fillStyle(0xcc0000, 0.04);
-        flick.fillRect(0, 0, W, 4);
-        flick.setY(H * 0.39).setAlpha(0);
-        this.time.addEvent({
-            delay: 4000 + Math.random() * 4000, loop: true,
-            callback: () => {
-                this.tweens.add({
-                    targets: flick, alpha: { from: 0, to: 0.5 },
-                    duration: 55, yoyo: true, repeat: 2 + Math.floor(Math.random() * 3),
-                });
-            },
-        });
-
-        // Pulse the active menu label
-        this.time.addEvent({
-            delay: 1100, loop: true,
-            callback: () => {
-                const item = this._menuItems[this._menuIndex];
-                if (!item) return;
-                this.tweens.add({
-                    targets: item.label, alpha: { from: 1, to: 0.55 },
-                    duration: 200, yoyo: true,
-                });
-            },
-        });
+        const mist = this.add.graphics().setAlpha(0.25);
+        mist.fillGradientStyle(0x8095aa, 0x8095aa, 0x080c12, 0x080c12, 0, 0.08, 0, 0);
+        mist.fillRect(W * 0.47, H * 0.57, W * 0.65, 90);
+        this.tweens.add({ targets: mist, x: -40, duration: 12000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
 
     // ─── MENU LOGIC ──────────────────────────────────────────────────────────
@@ -314,7 +242,7 @@ class TitleScene extends Phaser.Scene {
             item.bar.setVisible(sel);
             item.bL.setVisible(sel);
             item.bR.setVisible(sel);
-            item.label.setColor(sel ? '#e0d8c8' : '#484840').setAlpha(1);
+            item.label.setColor(sel ? '#eef0ed' : '#99a5b4').setAlpha(1);
         });
     }
 
@@ -374,7 +302,7 @@ class TitleScene extends Phaser.Scene {
         modal.push(...this._drawPanel(pX, pY, pW, pH));
 
         modal.push(this.add.text(W / 2, pY + 20, 'SELECT SAVE FILE', {
-            fontSize: '11px', fontFamily: 'Share Tech Mono', color: '#555550', letterSpacing: 5,
+            fontSize: '11px', fontFamily: UITheme.font, color: '#8d9aaa', letterSpacing: 5,
         }).setOrigin(0.5));
 
         modal.push(...this._divider(pX + 20, pY + 42, pW - 40));
@@ -391,25 +319,25 @@ class TitleScene extends Phaser.Scene {
             modal.push(bg);
 
             modal.push(this.add.text(pX + 30, sy + 9, `SLOT  ${i + 1}`, {
-                fontSize: '10px', fontFamily: 'Share Tech Mono',
+                fontSize: '12px', fontFamily: UITheme.font,
                 color: ex ? '#7a5c3a' : '#2a2a28', letterSpacing: 3,
             }));
 
             if (ex) {
                 modal.push(this.add.text(pX + 110, sy + 9, save.room, {
-                    fontSize: '10px', fontFamily: 'Share Tech Mono', color: '#b8a888',
+                    fontSize: '12px', fontFamily: UITheme.font, color: '#b8a888',
                 }));
                 modal.push(this.add.text(pX + 30, sy + 32, save.formattedDate, {
-                    fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#3a3a38',
+                    fontSize: '11px', fontFamily: UITheme.font, color: '#3a3a38',
                 }));
                 const hpPct = save.hp / save.hpMax;
                 modal.push(this.add.text(pX + pW - 130, sy + 9, `HP  ${save.hp} / ${save.hpMax}`, {
-                    fontSize: '10px', fontFamily: 'Share Tech Mono',
+                    fontSize: '12px', fontFamily: UITheme.font,
                     color: hpPct > 0.5 ? '#448844' : hpPct > 0.25 ? '#aa8822' : '#cc3322',
                 }));
                 const actLabel = (save.act || 'act1').replace('act', 'ACT ').toUpperCase();
                 modal.push(this.add.text(pX + pW - 130, sy + 32, actLabel, {
-                    fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#3a4c5c',
+                    fontSize: '11px', fontFamily: UITheme.font, color: '#3a4c5c',
                 }));
 
                 const hitArea = this.add.rectangle(pX + pW / 2, sy + 28, pW - 32, 56, 0x000000, 0)
@@ -426,13 +354,13 @@ class TitleScene extends Phaser.Scene {
                 modal.push(hitArea);
             } else {
                 modal.push(this.add.text(pX + 110, sy + 20, '[ VIDE ]', {
-                    fontSize: '10px', fontFamily: 'Share Tech Mono', color: '#1e1e1c',
+                    fontSize: '12px', fontFamily: UITheme.font, color: '#1e1e1c',
                 }));
             }
         });
 
         modal.push(this.add.text(W / 2, pY + pH - 16, '[ESC]  Back', {
-            fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#2c2c2a', letterSpacing: 3,
+            fontSize: '11px', fontFamily: UITheme.font, color: '#94a1b1', letterSpacing: 3,
         }).setOrigin(0.5));
 
         const escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
@@ -456,13 +384,13 @@ class TitleScene extends Phaser.Scene {
         modal.push(...this._drawPanel(pX, pY, pW, pH));
 
         modal.push(this.add.text(W / 2, pY + 20, 'OPTIONS  /  CONTROLS', {
-            fontSize: '11px', fontFamily: 'Share Tech Mono', color: '#555550', letterSpacing: 5,
+            fontSize: '11px', fontFamily: UITheme.font, color: '#8d9aaa', letterSpacing: 5,
         }).setOrigin(0.5));
 
         modal.push(...this._divider(pX + 20, pY + 42, pW - 40));
 
         modal.push(this.add.text(pX + 28, pY + 54, 'MOVEMENT', {
-            fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#3a4c5a', letterSpacing: 3,
+            fontSize: '11px', fontFamily: UITheme.font, color: '#94a1b1', letterSpacing: 3,
         }));
 
         const controls = [
@@ -475,17 +403,17 @@ class TitleScene extends Phaser.Scene {
         controls.forEach(([k, v], i) => {
             const yy = pY + 72 + i * 28;
             modal.push(this.add.text(pX + 36, yy, k, {
-                fontSize: '10px', fontFamily: 'Share Tech Mono', color: '#667788',
+                fontSize: '12px', fontFamily: UITheme.font, color: '#667788',
             }));
             modal.push(this.add.text(pX + pW - 28, yy, v, {
-                fontSize: '10px', fontFamily: 'Share Tech Mono', color: '#b0a080',
+                fontSize: '12px', fontFamily: UITheme.font, color: '#b0a080',
             }).setOrigin(1, 0));
         });
 
         modal.push(...this._divider(pX + 20, pY + 216, pW - 40));
 
         modal.push(this.add.text(pX + 28, pY + 228, 'IN COMBAT', {
-            fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#3a4c5a', letterSpacing: 3,
+            fontSize: '11px', fontFamily: UITheme.font, color: '#94a1b1', letterSpacing: 3,
         }));
 
         const combat = [
@@ -496,17 +424,17 @@ class TitleScene extends Phaser.Scene {
         combat.forEach(([k, v], i) => {
             const yy = pY + 246 + i * 28;
             modal.push(this.add.text(pX + 36, yy, k, {
-                fontSize: '10px', fontFamily: 'Share Tech Mono', color: '#667788',
+                fontSize: '12px', fontFamily: UITheme.font, color: '#667788',
             }));
             modal.push(this.add.text(pX + pW - 28, yy, v, {
-                fontSize: '10px', fontFamily: 'Share Tech Mono', color: '#b0a080',
+                fontSize: '12px', fontFamily: UITheme.font, color: '#b0a080',
             }).setOrigin(1, 0));
         });
 
         modal.push(...this._divider(pX + 20, pY + 326, pW - 40));
 
         modal.push(this.add.text(W / 2, pY + pH - 18, '[ESC]  Back', {
-            fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#2c2c2a', letterSpacing: 3,
+            fontSize: '11px', fontFamily: UITheme.font, color: '#94a1b1', letterSpacing: 3,
         }).setOrigin(0.5));
 
         const escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
@@ -516,25 +444,7 @@ class TitleScene extends Phaser.Scene {
     // ─── HELPERS ─────────────────────────────────────────────────────────────
 
     _drawPanel(pX, pY, pW, pH) {
-        const objs = [];
-        const bg = this.add.graphics();
-        bg.fillStyle(0x020406, 0.97);
-        bg.fillRect(pX, pY, pW, pH);
-        bg.lineStyle(1, 0x2a0000, 0.9);
-        bg.strokeRect(pX, pY, pW, pH);
-
-        // Corner accents
-        const cL = 12;
-        bg.lineStyle(2, 0x880000, 0.85);
-        [ [pX, pY, 1, 1], [pX + pW, pY, -1, 1], [pX, pY + pH, 1, -1], [pX + pW, pY + pH, -1, -1] ]
-        .forEach(([x, y, dx, dy]) => {
-            bg.beginPath();
-            bg.moveTo(x, y + dy * cL); bg.lineTo(x, y); bg.lineTo(x + dx * cL, y);
-            bg.strokePath();
-        });
-
-        objs.push(bg);
-        return objs;
+        return [UITheme.panel(this, pX, pY, pW, pH)];
     }
 
     _divider(x, y, w) {

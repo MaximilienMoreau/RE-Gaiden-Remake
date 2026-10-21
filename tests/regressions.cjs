@@ -6,7 +6,7 @@ const path = require('node:path');
 function game() {
     const context = vm.createContext({ console, Date, Math, AudioSynth: { sfx() {}, playBgm() {} }, Phaser: { Scene: class {} },
         localStorage: { value: null, getItem() { return this.value; }, setItem(k, v) { this.value = v; } } });
-    for (const file of ['Config', 'data/Items', 'data/Enemies', 'data/Maps', 'data/Dialogues',
+    for (const file of ['Config', 'utils/UITheme', 'data/Items', 'data/Enemies', 'data/Maps', 'data/Dialogues',
         'systems/EventSystem', 'systems/SaveSystem', 'systems/InventorySystem',
         'scenes/GameScene', 'scenes/CombatScene', 'scenes/GameOverScene']) {
         vm.runInContext(fs.readFileSync(path.join(__dirname, '../js', file + '.js'), 'utf8'), context);

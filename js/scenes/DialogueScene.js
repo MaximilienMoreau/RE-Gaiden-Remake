@@ -22,6 +22,7 @@ class DialogueScene extends Phaser.Scene {
     }
 
     create() {
+        this.scene.bringToTop();
         this.events.once('shutdown', this.shutdown, this);
         const W = CONFIG.WIDTH, H = CONFIG.HEIGHT;
 
@@ -46,15 +47,9 @@ class DialogueScene extends Phaser.Scene {
         this._bottomBar = this.add.rectangle(W / 2, H - 35, W, 70, 0x000000).setDepth(10);
 
         // Dialogue box
-        const boxH = 140;
-        const boxY = H - boxH - 10;
-        this._box = this.add.graphics().setDepth(11);
-        this._box.fillStyle(0x030508, 0.97);
-        this._box.fillRect(20, boxY, W - 40, boxH);
-        this._box.lineStyle(1, 0x223344, 0.8);
-        this._box.strokeRect(20, boxY, W - 40, boxH);
-        this._box.lineStyle(1, 0x334455, 0.4);
-        this._box.strokeRect(22, boxY + 2, W - 44, boxH - 4);
+        const boxH = 172;
+        const boxY = H - boxH - 24;
+        this._box = UITheme.panel(this, 24, boxY, W - 48, boxH).setDepth(11);
 
         // Portrait area (left side)
         this._portraitBg = this.add.graphics().setDepth(12);
@@ -69,29 +64,29 @@ class DialogueScene extends Phaser.Scene {
         // Speaker name plate
         this._speakerBg = this.add.graphics().setDepth(12);
         this._speakerText = this.add.text(116, boxY + 12, '', {
-            fontSize: '11px',
-            fontFamily: 'Share Tech Mono, monospace',
+            fontSize: '14px',
+            fontFamily: UITheme.font,
             color: '#c8a040',
             letterSpacing: 4,
         }).setDepth(13);
 
         // Main text
         this._mainText = this.add.text(116, boxY + 34, '', {
-            fontSize: '11px',
-            fontFamily: 'Share Tech Mono, monospace',
-            color: '#d8d0c8',
+            fontSize: '14px',
+            fontFamily: UITheme.font,
+            color: '#e2e7ed',
             wordWrap: { width: W - 160 },
             lineSpacing: 5,
         }).setDepth(13);
 
         // Line counter
         this._counterText = this.add.text(W - 30, boxY + boxH - 18, '', {
-            fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#444',
+            fontSize: '9px', fontFamily: UITheme.font, color: '#8492a3',
         }).setOrigin(1, 0).setDepth(13);
 
         // Advance prompt
         this._promptText = this.add.text(W - 30, boxY + boxH - 20, '▶', {
-            fontSize: '12px', fontFamily: 'Share Tech Mono', color: '#888870',
+            fontSize: '12px', fontFamily: UITheme.font, color: '#888870',
         }).setOrigin(1, 1).setDepth(13).setAlpha(0);
         this.tweens.add({
             targets: this._promptText,
@@ -104,7 +99,7 @@ class DialogueScene extends Phaser.Scene {
         // Input
         this._spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         this._enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
-        this._escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESCAPE);
+        this._escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
 
         this._spaceKey.on('down', () => this._advance());
         this._enterKey.on('down', () => this._advance());
@@ -162,7 +157,7 @@ class DialogueScene extends Phaser.Scene {
             system: '#888880', highlight: '#ffcc44', red: '#cc3333',
             dim: '#555550', action: '#6688aa', examine: '#88aacc',
         };
-        const textStyle = line.style ? styleColors[line.style] : '#d8d0c8';
+        const textStyle = line.style ? styleColors[line.style] : '#e2e7ed';
 
         this._mainText.setText('');
         this._mainText.setColor(textStyle);

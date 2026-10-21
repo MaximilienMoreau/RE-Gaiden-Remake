@@ -31,7 +31,7 @@ class GameOverScene extends Phaser.Scene {
         }).setOrigin(0.5).setAlpha(0);
 
         this.add.text(W / 2, H / 2 + 20, 'OPERATOR DOWN', {
-            fontSize: '12px', fontFamily: 'Share Tech Mono', color: '#660000', letterSpacing: 6,
+            fontSize: '12px', fontFamily: UITheme.font, color: '#660000', letterSpacing: 6,
         }).setOrigin(0.5);
 
         this.tweens.add({
@@ -50,7 +50,7 @@ class GameOverScene extends Phaser.Scene {
         ];
         const quote = quotes[Math.floor(Math.random() * quotes.length)];
         this.add.text(W / 2, H / 2 + 60, quote, {
-            fontSize: '10px', fontFamily: 'Share Tech Mono', color: '#442222', fontStyle: 'italic',
+            fontSize: '10px', fontFamily: UITheme.font, color: '#442222', fontStyle: 'italic',
         }).setOrigin(0.5);
 
         // Options
@@ -63,7 +63,7 @@ class GameOverScene extends Phaser.Scene {
         let selected = 0;
         const optTexts = options.map((opt, i) => {
             return this.add.text(W / 2, yy + i * 36, opt.text, {
-                fontSize: '12px', fontFamily: 'Share Tech Mono',
+                fontSize: '12px', fontFamily: UITheme.font,
                 color: i === 0 ? '#ffffff' : '#666',
                 letterSpacing: 3,
             }).setOrigin(0.5).setAlpha(0);
