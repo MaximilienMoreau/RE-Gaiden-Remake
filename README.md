@@ -98,6 +98,13 @@ Combat triggers automatically when Barry gets close to an enemy. A **targeting r
 
 ### Inventory
 
+Barry starts with his **Combat Knife**, equipped and visible in the inventory.
+Select it and click **EQUIP** to switch back from a firearm at any time during exploration.
+The knife is permanent equipment: it cannot be discarded or stored. Older saves
+recover it on load; if the inventory is full, one other item moves into storage.
+Select compatible ammunition and click **RELOAD** to load the equipped firearm.
+Long documents are split into pages advanced with **SPACE / ENTER**.
+
 | Action | How |
 |---|---|
 | Select item | Left-click a slot |
@@ -141,7 +148,7 @@ Companions match Barry's walking speed and sprint to catch up when they fall beh
 Interact with a **typewriter** (green glow) to open the save menu. Three slots are available, each showing the room name and save date.
 
 ### Item Box
-Interact with an **item box** in safe rooms to access long-term storage. Click **[TAKE]** to withdraw items (requires a free inventory slot). Contents persist across saves.
+Interact with an **item box** in safe rooms to access long-term storage. Use **[DEPOSIT] → [STORE]** to store an item, or **[TAKE] → [TAKE]** to withdraw one. Stackable items can be withdrawn into an existing stack even when all slots are occupied. Use **[PREV] / [NEXT]** for additional pages. Stored weapons retain their loaded ammunition. Contents persist across saves.
 
 ---
 
@@ -296,9 +303,11 @@ With Node.js 18 or newer, run:
 node tests/regressions.cjs
 ```
 
-No dependency installation is required. These checks exercise inventory and ammo
-conservation, save/load, companion restoration, the final story sequence, and map
-connections using lightweight scene stubs. Rendering, audio, and a complete
+No dependency installation is required. These checks exercise inventory actions, ammo conservation, knife recovery,
+actual save and storage menu callbacks, companion damage, document pagination,
+key acquisition, room path connectivity, and the final story sequence through
+both boss phases to the ending using lightweight scene stubs. Dialogue checks cover
+party composition, weapon ownership, document knowledge, and deferred story triggers. Rendering, audio, and a complete
 playthrough must still be checked in a browser.
 
 Keys remain reusable until stored in the item box and cannot be discarded.
@@ -314,3 +323,19 @@ container while preserving the game's aspect ratio; small rooms are centered.
 Character sprites and room textures retain the existing procedural art.
 
 Previews: [title menu](assets/previews/menu.png) · [inventory](assets/previews/inventory.png).
+
+
+## Story continuity
+
+Leon and Lucia must both be rescued before entering the cargo hold. If one is
+missing, the entrance points you toward their location. Earlier conversations
+adapt when Barry is alone or when Lucia is found before Leon.
+
+Reading a file (including closing its reading window with Escape) records that it
+was consulted, independently of whether it is later stored or discarded. This
+knowledge survives saving. Optional files add context without being required to
+finish the adventure. Older saves without reading flags use the unconsulted variants.
+
+The final identification question uses the same wording in dialogue and in the
+choice menu; its clue is introduced when Leon joins. Cutscene staging follows
+Barry's equipped weapon, including his knife or an empty firearm.

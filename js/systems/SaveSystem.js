@@ -22,9 +22,9 @@ const SaveSystem = {
                 character: 'barry',
             },
             // Inventory
-            inventory: [],
+            inventory: [{ id: 'knife', qty: 1 }],
             itemBox: [],
-            equippedWeapon: null,
+            equippedWeapon: 'knife',
             equippedWeaponAmmo: 0,
             weaponAmmoMap: {},
             ammoRemainders: {},
@@ -138,12 +138,30 @@ const SaveSystem = {
             if (this._validState(allSaves[slot])) {
                 this._state = allSaves[slot];
                 this._state.weaponAmmoMap ||= {};
+                this._restoreKnife();
                 return true;
             }
             return false;
         } catch (e) {
             console.error('Load failed:', e);
             return false;
+        }
+    },
+
+    // Restore Barry's permanent equipment in older saves without losing any items.
+    _restoreKnife() {
+        const state = this._state;
+        if (state.inventory.some(item => item.id === 'knife')) return;
+        const stored = state.itemBox.findIndex(item => item.id === 'knife');
+        if (stored !== -1 && --state.itemBox[stored].qty <= 0) state.itemBox.splice(stored, 1);
+        if (state.inventory.length >= CONFIG.MAX_INVENTORY_SLOTS) {
+            const index = state.inventory.findIndex(item => item.id !== state.equippedWeapon);
+            state.itemBox.push(...state.inventory.splice(index, 1));
+        }
+        state.inventory.unshift({ id: 'knife', qty: 1 });
+        if (!state.equippedWeapon) {
+            state.equippedWeapon = 'knife';
+            state.equippedWeaponAmmo = 0;
         }
     },
 
