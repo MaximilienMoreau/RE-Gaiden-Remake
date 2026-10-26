@@ -4,14 +4,14 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 function game() {
-    const context = vm.createContext({ console, Date, Math, AudioSynth: { sfx() {}, playBgm() {}, stopBgm() {} }, Phaser: { Scene: class {}, Math: { Distance: { Between: (x, y, a, b) => Math.hypot(x - a, y - b) } }, Input: { Keyboard: { KeyCodes: { ESC: 27 } } } },
+    const context = vm.createContext({ console, Date, Math, AudioSynth: { sfx() {}, playBgm() {}, stopBgm() {} }, Phaser: { Scene: class {}, GameObjects: { Container: class {} }, Math: { Distance: { Between: (x, y, a, b) => Math.hypot(x - a, y - b) } }, Input: { Keyboard: { KeyCodes: { ESC: 27 } } } },
         localStorage: { value: null, getItem() { return this.value; }, setItem(k, v) { this.value = v; } } });
-    for (const file of ['Config', 'utils/UITheme', 'data/Items', 'data/Enemies', 'data/Maps', 'data/Dialogues',
-        'systems/EventSystem', 'systems/SaveSystem', 'systems/InventorySystem',
+    for (const file of ['Config', 'utils/UITheme', 'data/Items', 'data/Enemies', 'data/Maps', 'data/Dialogues', 'utils/RoomNavigation',
+        'systems/EventSystem', 'systems/SaveSystem', 'systems/InventorySystem', 'entities/NPC', 'entities/Enemy',
         'scenes/GameScene', 'scenes/CombatScene', 'scenes/GameOverScene', 'scenes/InventoryScene', 'scenes/DialogueScene']) {
         vm.runInContext(fs.readFileSync(path.join(__dirname, '../js', file + '.js'), 'utf8'), context);
     }
-    return vm.runInContext('({ CONFIG, ITEMS, MAPS, DIALOGUES, SaveSystem, InventorySystem, EventSystem, GameScene, CombatScene, GameOverScene, InventoryScene, DialogueScene })', context);
+    return vm.runInContext('({ CONFIG, ITEMS, MAPS, DIALOGUES, RoomNavigation, NPC, Enemy, SaveSystem, InventorySystem, EventSystem, GameScene, CombatScene, GameOverScene, InventoryScene, DialogueScene })', context);
 }
 test('stack overflow is conserved and full inventory additions are atomic', () => {
     const { SaveSystem: S, InventorySystem: I, CONFIG } = game(); S.newGame();
@@ -78,7 +78,9 @@ test('correct Leon choice waits for dialogue completion before starting final fi
     scene._triggerCutscene = id => { assert.equal(scene._isBusy, false); dialogue = id; };
     scene._resolveTwoLeonsChoice(true); assert.equal(dialogue, 'act4_real_leon_identified');
     scene.scene = { isActive: () => false }; scene._onCombatTriggered = data => { combat = data; };
-    scene._onDialogueClosed({ dialogueId: dialogue }); assert.equal(combat.enemyId, 'creature_p1');
+    let transformDone; scene._playFalseLeonTransformation = done => { transformDone = done; };
+    scene._onDialogueClosed({ dialogueId: dialogue }); assert.equal(combat, undefined);
+    transformDone(); assert.equal(combat.enemyId, 'creature_p1');
 });
 test('final boss victory starts the epilogue despite exploration input lock', () => {
     const { SaveSystem: S, GameScene: G } = game(); S.newGame(); const scene = new G();
@@ -171,7 +173,10 @@ function uiScene(scene) {
         });
         objects.push(object); return object;
     };
-    scene.add = { graphics: () => make(), text: (x, y, label) => make(label) };
+    scene.add = { graphics: () => make(), text: (x, y, label) => make(label),
+        container: () => make(), rectangle: () => make(),
+        image: (x, y, texture) => { const obj = make(); obj.texture = texture; return obj; } };
+    scene.tweens = { add() {}, killTweensOf() {} };
     const keys = [];
     scene.input = { keyboard: { addKey: () => { const key = make(); keys.push(key); return key; }, removeKey() {} } };
     scene._player = { locked: false, lockInput(value) { this.locked = value; } };
@@ -343,7 +348,7 @@ test('keys can be acquired before their locks, and the adventure reaches the end
     const launches = []; const timers = [];
     scene.time = { delayedCall: (ms, fn) => timers.push(fn) };
     scene.scene = { isActive: () => false, launch: (key, data) => launches.push({ key, data }), stop() {}, start: key => launches.push({ key }) };
-    scene.cameras = { main: { flash() {}, fadeOut: (ms, r, g, b, fn) => fn(null, 1) } };
+    scene.cameras = { main: { flash() {}, shake() {}, fadeOut: (ms, r, g, b, fn) => fn(null, 1) } };
     scene._onDialogueClosed({ dialogueId: 'act1_leon_first_meeting' });
     scene._onDialogueClosed({ dialogueId: 'act2_lucia_found' });
     assert.equal(S.getFlag(CONFIG.FLAGS.ACT1_LEON_FOUND), true);
@@ -351,7 +356,7 @@ test('keys can be acquired before their locks, and the adventure reaches the end
     scene._triggerCutscene('act3_creature_revealed'); scene._onDialogueClosed({ dialogueId: 'act3_creature_revealed' });
     scene._handleTwoLeonsScene(); assert.equal(launches.at(-1).data.dialogueId, 'act4_two_leons_intro');
     scene._resolveTwoLeonsChoice(true); scene._onDialogueClosed({ dialogueId: 'act4_real_leon_identified' });
-    timers.shift()(); assert.equal(launches.at(-1).key, CONFIG.SCENES.COMBAT);
+    timers.shift()(); timers.shift()(); timers.shift()(); assert.equal(launches.at(-1).key, CONFIG.SCENES.COMBAT);
     // With the permanent knife, ammunition exhaustion cannot block the final fight.
     const combat = new C(); combat.init(launches.at(-1).data);
     combat._showCombatMessage = () => {}; combat._enemyShakeEffect = () => {}; combat._updateEnemyHpDisplay = () => {};
@@ -492,4 +497,170 @@ test('legacy Leon recruitment flags satisfy the new story prerequisites after lo
     S.setFlag(`npc_spoken_restaurant_hall_${index}`); S.setFlag(CONFIG.FLAGS.ACT2_LUCIA_LOCATED);
     const scene = new G(); scene.init({ fromSave: true });
     assert.equal(S.getFlag(CONFIG.FLAGS.ACT1_LEON_FOUND), true); assert.equal(scene._storyPartyReady(), true);
+});
+
+test('E selects the nearest pickup before scenery or a following companion', () => {
+    const { GameScene: G } = game(); const scene = new G(); scene._player = { x: 0, y: 0 };
+    const actor = (x, extra = {}) => ({ active: true, x, y: 0, interactRange: 64, ...extra });
+    const door = actor(1, { interactType: 'door' });
+    const far = actor(40, { interactType: 'item' }); const near = actor(30, { interactType: 'item' });
+    const lucia = actor(5, { isFollowing: true }); scene._interactables = [door, far, near]; scene._npcs = [lucia];
+    let picked, talked; scene._handleInteract = object => { picked = object; }; scene._handleNPCInteract = npc => { talked = npc; };
+    scene._onPlayerInteract(); assert.equal(picked, near); assert.equal(talked, undefined);
+    near.active = false; scene._onPlayerInteract(); assert.equal(picked, far);
+    scene._interactables = []; scene._onPlayerInteract(); assert.equal(talked, undefined);
+    scene._onCompanionTalk(); assert.equal(talked, lucia);
+});
+
+test('first meetings still use E while T only talks to the nearest following companion', () => {
+    const { GameScene: G } = game(); const scene = new G(); scene._player = { x: 0, y: 0 };
+    const stranger = { active: true, isFollowing: false, x: 10, y: 0, interactRange: 64 };
+    const leon = { active: true, isFollowing: true, x: 20, y: 0, interactRange: 64 };
+    const lucia = { active: true, isFollowing: true, x: 30, y: 0, interactRange: 64 };
+    scene._npcs = [lucia, stranger, leon]; let talked; scene._handleNPCInteract = npc => { talked = npc; };
+    scene._onPlayerInteract(); assert.equal(talked, stranger);
+    scene._onCompanionTalk(); assert.equal(talked, leon);
+    scene._isBusy = true; talked = null; scene._onCompanionTalk(); scene._onPlayerInteract(); assert.equal(talked, null);
+});
+
+test('pickup failure does not fall through to companion dialogue and prompts match selection', () => {
+    const { GameScene: G, SaveSystem: S, InventorySystem: I, CONFIG } = game(); S.newGame();
+    I.addItem('first_aid_spray', CONFIG.MAX_INVENTORY_SLOTS - 1);
+    const scene = new G(); scene._player = { x: 0, y: 0 }; scene._showFloatingMessage = () => {};
+    let prompt = false, npcPrompt = false, talked = false;
+    const key = { active: true, interactType: 'item', x: 20, y: 0, interactRange: 48,
+        data2: { itemId: 'key_cargo', roomId: 'engine_room_ante', idx: 5 },
+        showInteractPrompt: value => { prompt = value; }, destroy() { throw Error('full inventory removed key'); } };
+    const lucia = { active: true, isFollowing: true, x: 10, y: 0, interactRange: 64, showInteractPrompt: value => { npcPrompt = value; } };
+    scene._interactables = [key]; scene._npcs = [lucia]; scene._handleNPCInteract = () => { talked = true; };
+    scene._updateProximityObjects(); assert.equal(prompt, true); assert.equal(npcPrompt, true);
+    scene._onPlayerInteract(); assert.equal(talked, false); assert.equal(I.hasItem('key_cargo'), false);
+    assert.equal(!!S.isItemCollected('engine_room_ante', 5), false);
+});
+
+test('two Leons remain visually distinct and transformation completes before combat is allowed', () => {
+    const { SaveSystem: S, GameScene: G } = game(); S.newGame(); const scene = new G(); uiScene(scene);
+    const timers = [], animations = []; let finished = false;
+    scene.time = { delayedCall: (delay, fn) => { const timer = { delay, fn, remove() {} }; timers.push(timer); return timer; } };
+    scene.tweens.add = config => animations.push(config);
+    scene.cameras = { main: { shake() {} } };
+    scene._createTwoLeonsStage();
+    const actors = scene._twoLeonsActors;
+    assert.equal(actors.fake.texture, 'leon'); assert.equal(actors.real.texture, 'leon');
+    assert.equal(actors.fakeLabel.text, 'LEON A'); assert.equal(actors.realLabel.text, 'LEON B');
+    scene._playFalseLeonTransformation(() => { finished = true; });
+    assert.equal(scene._player.locked, true); assert.equal(scene._isBusy, true);
+    assert.equal(actors.monster.texture, 'creature_p1');
+    assert.ok(animations.some(a => a.targets === actors.fake && a.alpha === 0));
+    assert.ok(animations.some(a => a.targets === actors.monster && a.alpha === 1));
+    assert.equal(finished, false); assert.equal(timers[0].delay, 2800);
+    timers[0].fn(); assert.equal(finished, false); assert.equal(actors.fakeLabel.text, 'GENESIS-01');
+    assert.equal(timers[1].delay, 1000); timers[1].fn(); assert.equal(finished, true);
+});
+
+test('leaving the finale cancels its animation and restores the original Leon companion', () => {
+    const { GameScene: G } = game(); const scene = new G(); uiScene(scene);
+    const leon = { active: true, npcId: 'leon', visible: true, setVisible(value) { this.visible = value; } };
+    scene._npcs = [leon]; let removed = false; const killed = [];
+    scene.time = { delayedCall: () => ({ remove: () => { removed = true; } }) };
+    scene.tweens.killTweensOf = target => killed.push(target);
+    scene._playFalseLeonTransformation(() => { throw Error('cancelled transformation started combat'); });
+    assert.equal(leon.visible, false); const monster = scene._twoLeonsActors.monster;
+    scene._clearTwoLeonsStage(); assert.equal(removed, true); assert.equal(leon.visible, true);
+    assert.equal(scene._twoLeonsStage, null); assert.ok(killed.includes(monster));
+    scene._clearTwoLeonsStage(); // Shutdown cleanup can safely run twice.
+});
+
+function testCompanion(NPC, scene, x, y) {
+    const npc = Object.create(NPC.prototype);
+    Object.assign(npc, { scene, x, y, isFollowing: true, _followSpeed: 140, _followRunSpeed: 220,
+        _attackRange: 57.6, _attackDamage: 30, _attackCooldown: 0,
+        body: { vx: 0, vy: 0, setVelocity(x, y) { this.vx = x; this.vy = y; } } });
+    return npc;
+}
+
+test('companions navigate around a wall without crossing solid tiles', () => {
+    const { NPC, MAPS, RoomNavigation: N } = game();
+    const tiles = Array.from({ length: 7 }, (_, y) => Array.from({ length: 7 }, (_, x) =>
+        x === 0 || y === 0 || x === 6 || y === 6 || (x === 3 && y <= 4) ? 1 : 0));
+    const room = MAPS.test_route = { id: 'test_route', tileWidth: 7, tileHeight: 7, tiles, connections: {} };
+    const npc = testCompanion(NPC, { _currentRoomId: room.id }, 80, 80), player = { x: 144, y: 80 };
+    const path = N.findPath(room, npc.x, npc.y, player.x, player.y);
+    assert.ok(path.some(p => p.y === 176), 'route must use the bottom opening');
+    let arrived = false;
+    for (let frame = 0; frame < 1000; frame++) {
+        npc.update(frame * 16, 16, player, []);
+        const x = npc.x + npc.body.vx * 0.016, y = npc.y + npc.body.vy * 0.016;
+        assert.ok(N.hasLineOfSight(room, npc.x, npc.y, x, y, 10), 'movement crossed a wall');
+        npc.x = x; npc.y = y;
+        if (Math.hypot(npc.x - player.x, npc.y - player.y) <= 48 && N.hasLineOfSight(room, npc.x, npc.y, player.x, player.y)) { arrived = true; break; }
+    }
+    assert.equal(arrived, true);
+});
+
+test('walls block companion attacks and close-range enemy combat triggers', () => {
+    const { NPC, Enemy, MAPS } = game();
+    MAPS.test_wall = { tileWidth: 5, tileHeight: 3, connections: {}, tiles: [[1, 1, 1, 1, 1], [1, 0, 1, 0, 1], [1, 1, 1, 1, 1]] };
+    const npc = testCompanion(NPC, { _currentRoomId: 'test_wall' }, 60, 48);
+    let damage = 0; const enemy = { alive: true, x: 100, y: 48, takeDamage: amount => { damage += amount; } };
+    npc.update(1000, 16, { x: 60, y: 48 }, [enemy]); assert.equal(damage, 0);
+    MAPS.test_wall.tiles[1][2] = 0; npc.update(1016, 16, { x: 60, y: 48 }, [enemy]); assert.equal(damage, 30);
+    const monster = Object.create(Enemy.prototype); let combats = 0;
+    Object.assign(monster, { alive: true, roomId: 'test_wall', x: 60, y: 48, speed: 40, detectionRange: 180,
+        _state: 'chasing', _lastAttack: 0, body: { velocity: { x: 0 }, setVelocity() {} }, _triggerCombat: () => combats++ });
+    MAPS.test_wall.tiles[1][2] = 1; monster.update(4000, 16, { x: 100, y: 48 }); assert.equal(combats, 0);
+    MAPS.test_wall.tiles[1][2] = 0; monster.update(4016, 16, { x: 100, y: 48 }); assert.equal(combats, 1);
+});
+
+test('enemy death is persisted immediately and emitted only once even if its animation is interrupted', () => {
+    const { Enemy, SaveSystem: S, EventSystem: E } = game(); S.newGame(); let deaths = 0;
+    E.on('enemy_killed', () => deaths++);
+    const enemy = Object.create(Enemy.prototype);
+    Object.assign(enemy, { alive: true, roomId: 'aft_deck', enemyIndex: 1, x: 100, y: 100,
+        body: { setVelocity() {} }, scene: { tweens: { add() {} } } });
+    enemy.die(); assert.equal(S.isEnemyDefeated('aft_deck', 1), true); assert.equal(deaths, 1);
+    enemy.scene = null; enemy.die(); assert.equal(deaths, 1);
+    S.save(0); S.newGame(); S.load(0); assert.equal(S.isEnemyDefeated('aft_deck', 1), true);
+});
+
+test('overflow loot survives saving and room changes and is consumed only after successful pickup', () => {
+    const { GameScene: G, SaveSystem: S, InventorySystem: I, CONFIG } = game(); S.newGame();
+    I.addItem('first_aid_spray', CONFIG.MAX_INVENTORY_SLOTS - 1);
+    const scene = new G(); uiScene(scene); scene._currentRoomId = 'aft_deck';
+    const spawned = []; scene._spawnDroppedItem = (room, drop) => spawned.push(drop);
+    scene._leaveLootOnFloor('aft_deck', 'ammo_9mm', 336, 208);
+    assert.equal(S.getDroppedItems('aft_deck').length, 1); assert.equal(spawned.length, 1);
+    S.save(0); S.newGame(); assert.equal(S.load(0), true);
+    const drop = S.getDroppedItems('aft_deck')[0]; assert.equal(drop.itemId, 'ammo_9mm');
+    let destroyed = false; const pickup = { destroy: () => { destroyed = true; } };
+    scene._pickupItem(pickup, { ...drop, roomId: 'aft_deck' });
+    assert.equal(destroyed, false); assert.equal(S.getDroppedItems('aft_deck').length, 1);
+    I.removeItem('first_aid_spray'); scene._pickupItem(pickup, { ...drop, roomId: 'aft_deck' });
+    assert.equal(destroyed, true); assert.equal(I.getItemCount('ammo_9mm'), 1);
+    assert.equal(S.getDroppedItems('aft_deck').length, 0);
+    assert.equal(S.getState().collectedItems.aft_deck, undefined);
+    S.save(0); S.load(0); assert.equal(S.getDroppedItems('aft_deck').length, 0);
+});
+
+test('discard actions in both inventory menus require explicit confirmation and can be cancelled', () => {
+    const { SaveSystem: S, InventorySystem: I, InventoryScene: Inv } = game(); S.newGame(); I.addItem('handgun');
+    for (const method of ['_showActionButtons', '_showContextMenu']) {
+        const scene = new Inv(); const ui = uiScene(scene); scene._detailX = 0; scene._detailY = 0; scene._detailW = 300;
+        let closed = false; scene._close = () => { closed = true; };
+        const menu = () => method === '_showActionButtons' ? scene[method]({ id: 'handgun' }) : scene[method](I.getInventory().findIndex(i => i.id === 'handgun'), 100, 100);
+        menu(); ui.click('DISCARD'); assert.equal(I.hasItem('handgun'), true); assert.equal(closed, false);
+        ui.click('CANCEL [ESC]'); assert.equal(I.hasItem('handgun'), true); assert.equal(closed, false);
+        menu(); ui.click('DISCARD'); ui.click('CONFIRM DISCARD');
+        assert.equal(I.hasItem('handgun'), false); assert.equal(closed, true); I.addItem('handgun');
+    }
+});
+
+test('the Colt Python is obtainable and compatible with older saves of cabin 101', () => {
+    const { SaveSystem: S, MAPS, InventorySystem: I } = game(); S.newGame();
+    const index = MAPS.cabin_101.objects.findIndex(o => o.itemId === 'barry_revolver');
+    assert.ok(index >= 6, 'append the weapon so existing object save indices remain stable');
+    const state = S.getState(); state.visitedRooms.push('cabin_101'); state.collectedItems.cabin_101 = [3];
+    S.save(0); S.load(0); assert.equal(!!S.isItemCollected('cabin_101', index), false);
+    I.addItem('barry_revolver'); I.addItem('ammo_357'); I.equipWeapon('barry_revolver');
+    assert.equal(I.getEquippedWeapon().ammo, 6);
 });

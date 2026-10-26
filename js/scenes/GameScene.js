@@ -39,8 +39,10 @@ class GameScene extends Phaser.Scene {
     create() {
         this._bindEvents();
         this.events.once('shutdown', () => {
+            this._clearTwoLeonsStage();
             for (const [event, handler] of [
-                ['player_interact', this._onPlayerInteract], ['open_inventory', this._onOpenInventory],
+                ['player_interact', this._onPlayerInteract], ['player_talk', this._onCompanionTalk],
+                ['open_inventory', this._onOpenInventory],
                 ['player_reload', this._onReload], ['combat_triggered', this._onCombatTriggered],
                 ['enemy_killed', this._onEnemyKilled], ['combat_finished', this._onCombatFinished],
                 ['player_dead', this._onPlayerDead], ['dialogue_closed', this._onDialogueClosed],
@@ -77,6 +79,7 @@ class GameScene extends Phaser.Scene {
     _bindEvents() {
         // Remove old listeners first
         EventSystem.off('player_interact');
+        EventSystem.off('player_talk');
         EventSystem.off('open_inventory');
         EventSystem.off('player_reload');
         EventSystem.off('combat_triggered');
@@ -86,6 +89,7 @@ class GameScene extends Phaser.Scene {
         EventSystem.off('dialogue_closed');
 
         EventSystem.on('player_interact', this._onPlayerInteract, this);
+        EventSystem.on('player_talk', this._onCompanionTalk, this);
         EventSystem.on('open_inventory', this._onOpenInventory, this);
         EventSystem.on('player_reload', this._onReload, this);
         EventSystem.on('combat_triggered', this._onCombatTriggered, this);
@@ -140,6 +144,7 @@ class GameScene extends Phaser.Scene {
 
         // Place objects (items, doors, NPCs, enemies, etc.)
         this._placeObjects(roomDef);
+        for (const drop of SaveSystem.getDroppedItems(roomId)) this._spawnDroppedItem(roomId, drop);
 
         // Spawn animated door visuals at every connection point
         this._spawnConnectionDoors(roomDef);
@@ -190,6 +195,7 @@ class GameScene extends Phaser.Scene {
     }
 
     _clearRoom() {
+        this._clearTwoLeonsStage();
         // Destroy enemies
         this._enemies.forEach(e => { if (e && e.active) e.destroy(); });
         this._enemies = [];
@@ -739,30 +745,40 @@ class GameScene extends Phaser.Scene {
     // =========================================================
     // INTERACTIONS
     // =========================================================
-    _onPlayerInteract(data) {
-        if (this._isBusy) return;
+    _nearestInRange(actors) {
         const player = this._player;
-        if (!player) return;
-
-        // Check interactables in range
-        for (const obj of this._interactables) {
-            if (!obj || !obj.active) continue;
-            const dist = Phaser.Math.Distance.Between(player.x, player.y, obj.x, obj.y);
-            if (dist < obj.interactRange) {
-                this._handleInteract(obj);
-                return;
+        if (!player) return null;
+        let nearest = null, nearestDistance = Infinity;
+        for (const actor of actors) {
+            if (!actor?.active || actor.isInteractable === false) continue;
+            const distance = Phaser.Math.Distance.Between(player.x, player.y, actor.x, actor.y);
+            if (distance < actor.interactRange && distance < nearestDistance) {
+                nearest = actor;
+                nearestDistance = distance;
             }
         }
+        return nearest;
+    }
 
-        // Check NPCs in range
-        for (const npc of this._npcs) {
-            if (!npc || !npc.active) continue;
-            const dist = Phaser.Math.Distance.Between(player.x, player.y, npc.x, npc.y);
-            if (dist < npc.interactRange) {
-                this._handleNPCInteract(npc);
-                return;
-            }
-        }
+    _getInteractionTarget() {
+        // Pickups take priority over doors, scenery, and first-meeting NPCs.
+        return this._nearestInRange(this._interactables.filter(obj => obj?.interactType === 'item')) ||
+            this._nearestInRange(this._interactables) ||
+            this._nearestInRange(this._npcs.filter(npc => npc && !npc.isFollowing));
+    }
+
+    _onPlayerInteract() {
+        if (this._isBusy) return;
+        const target = this._getInteractionTarget();
+        if (!target) return;
+        if (target.interactType) this._handleInteract(target);
+        else this._handleNPCInteract(target);
+    }
+
+    _onCompanionTalk() {
+        if (this._isBusy) return;
+        const companion = this._nearestInRange(this._npcs.filter(npc => npc?.isFollowing));
+        if (companion) this._handleNPCInteract(companion);
     }
 
     _handleInteract(obj) {
@@ -799,7 +815,8 @@ class GameScene extends Phaser.Scene {
         // Files go directly to inventory as readable items
         if (InventorySystem.addItem(data.itemId)) {
             AudioSynth.sfx('item_pickup');
-            SaveSystem.markItemCollected(data.roomId, data.idx);
+            if (data.dropId) SaveSystem.collectDroppedItem(data.roomId, data.dropId);
+            else SaveSystem.markItemCollected(data.roomId, data.idx);
             this._showFloatingMessage(`+ ${def.name}`, '#ffcc44');
             EventSystem.emit('inventory_changed', {});
             obj.destroy();
@@ -1106,6 +1123,7 @@ class GameScene extends Phaser.Scene {
         this.cameras.main.flash(200, 255, 100, 100);
 
         this.time.delayedCall(300, () => {
+            if (data.enemyId === 'creature_p1') this._clearTwoLeonsStage();
             this.scene.launch(CONFIG.SCENES.COMBAT, {
                 enemyId: data.enemyId,
                 enemyHp: data.enemy?.hp,
@@ -1122,6 +1140,7 @@ class GameScene extends Phaser.Scene {
 
         try {
             if (data.victory) {
+                SaveSystem.markEnemyDefeated(data.roomId, data.enemyIndex);
                 // Remove the defeated enemy from the world
                 const enemy = this._enemies.find(
                     e => e && e.enemyIndex === data.enemyIndex && e.roomId === data.roomId
@@ -1139,9 +1158,10 @@ class GameScene extends Phaser.Scene {
                             const def = ITEMS[drop.toUpperCase()] || Object.values(ITEMS).find(i => i.id === drop);
                             this._showFloatingMessage(`+ ${def?.name || drop}`, '#ffcc44');
                         } else {
-                            this._showFloatingMessage('Inventory full — item lost!', '#ff4444');
+                            this._leaveLootOnFloor(data.roomId, drop, enemy?.x ?? this._player?.x, enemy?.y ?? this._player?.y);
                         }
                     });
+                    EventSystem.emit('inventory_changed', {});
                 }
 
                 // Check boss kill
@@ -1167,6 +1187,26 @@ class GameScene extends Phaser.Scene {
             this._player?.lockInput(false);
             AudioSynth.playBgm(MAPS[this._currentRoomId]?.bgm || 'exploration');
         }
+    }
+
+    _spawnDroppedItem(roomId, drop) {
+        const pickup = new Interactable(this, drop.tx, drop.ty, 'item', {
+            itemId: drop.itemId, dropId: drop.dropId, roomId,
+        });
+        this._interactables.push(pickup);
+    }
+
+    _leaveLootOnFloor(roomId, itemId, x, y) {
+        const room = MAPS[roomId];
+        if (!room) return;
+        const pos = SaveSystem.getState().player.position;
+        const tile = RoomNavigation.nearestFloor(room, x ?? (pos.tx + 0.5) * CONFIG.TILE_SIZE,
+            y ?? (pos.ty + 0.5) * CONFIG.TILE_SIZE);
+        if (!tile) return;
+        const drop = SaveSystem.addDroppedItem(roomId, itemId, tile.tx, tile.ty);
+        if (!drop) return;
+        if (this._currentRoomId === roomId) this._spawnDroppedItem(roomId, drop);
+        this._showFloatingMessage('Inventory full — loot left on the floor.', '#ffcc88');
     }
 
     _onEnemyKilled(data) {
@@ -1216,15 +1256,18 @@ class GameScene extends Phaser.Scene {
         // Don't unlock input while the Two Leons choice overlay is being shown
         if (data.dialogueId === 'act4_two_leons_intro') return;
 
-        this._isBusy = false;
-        this._player?.lockInput(false);
-
         if (data.dialogueId === 'act4_real_leon_identified') {
             SaveSystem.setFlag(CONFIG.FLAGS.ACT4_REAL_LEON_SAVED);
-            this._onCombatTriggered({ enemyId: 'creature_p1', enemyIndex: -99,
-                roomId: this._currentRoomId, isBoss: true });
+            this._playFalseLeonTransformation(() => {
+                this._isBusy = false;
+                this._onCombatTriggered({ enemyId: 'creature_p1', enemyIndex: -99,
+                    roomId: this._currentRoomId, isBoss: true });
+            });
             return;
         }
+
+        this._isBusy = false;
+        this._player?.lockInput(false);
 
         if (data.dialogueId === 'act1_leon_first_meeting') {
             SaveSystem.setFlag(CONFIG.FLAGS.ACT1_LEON_FOUND);
@@ -1270,6 +1313,7 @@ class GameScene extends Phaser.Scene {
 
         this.scene.launch(CONFIG.SCENES.DIALOGUE, {
             dialogueId: cutsceneId,
+            cinematicBackdrop: cutsceneId === 'act4_real_leon_identified',
             callerScene: CONFIG.SCENES.GAME,
         });
         return true;
@@ -1375,11 +1419,14 @@ class GameScene extends Phaser.Scene {
         if (!this._player || this._isBusy) return;
         const px = this._player.x, py = this._player.y;
 
-        // NPC prompts
+        // Prompts use the same selection rules as the actual keys.
+        const target = this._getInteractionTarget();
+        const companion = this._nearestInRange(this._npcs.filter(npc => npc?.isFollowing));
+        for (const obj of this._interactables) {
+            if (obj?.active) obj.showInteractPrompt?.(obj === target);
+        }
         for (const npc of this._npcs) {
-            if (!npc || !npc.active) continue;
-            const dist = Phaser.Math.Distance.Between(px, py, npc.x, npc.y);
-            npc.showInteractPrompt(dist < npc.interactRange);
+            if (npc?.active) npc.showInteractPrompt(npc.isFollowing ? npc === companion : npc === target);
         }
 
         // Cutscene triggers
@@ -1425,6 +1472,94 @@ class GameScene extends Phaser.Scene {
     // =========================================================
     // TWO LEONS SCENE
     // =========================================================
+    _createTwoLeonsStage() {
+        if (this._twoLeonsStage) return;
+        const W = CONFIG.WIDTH, H = CONFIG.HEIGHT;
+        const stage = this.add.container(0, 0).setScrollFactor(0).setDepth(160);
+        const background = this.add.rectangle(W / 2, H / 2, W, H, 0x05080d, 0.96);
+        const panels = [0.30, 0.70].map(x => this.add.rectangle(W * x, H * 0.42, 228, 270, 0x17212d, 0.95)
+            .setStrokeStyle(1, 0x78899b, 0.8));
+        const fake = this.add.image(W * 0.30, H * 0.42, 'leon').setDisplaySize(96, 144);
+        const real = this.add.image(W * 0.70, H * 0.42, 'leon').setDisplaySize(96, 144);
+        const label = (x, name) => this.add.text(W * x, H * 0.62, name, {
+            fontFamily: UITheme.displayFont, fontSize: '20px', color: '#e4eaf0',
+            stroke: '#000000', strokeThickness: 3,
+        }).setOrigin(0.5);
+        const fakeLabel = label(0.30, 'LEON A'), realLabel = label(0.70, 'LEON B');
+        this._twoLeonsVisuals = [background, ...panels, fake, real, fakeLabel, realLabel];
+        stage.add(this._twoLeonsVisuals);
+        this._twoLeonsStage = stage;
+        this._twoLeonsActors = { fake, real, fakeLabel, realLabel };
+        this._twoLeonsHiddenActors = this._npcs.filter(npc => npc?.active && npc.npcId === 'leon')
+            .map(npc => ({ npc, visible: npc.visible }));
+        for (const { npc } of this._twoLeonsHiddenActors) npc.setVisible(false);
+        this._fitMenuToCamera([stage]);
+        this._transformingFalseLeon = false;
+    }
+
+    _clearTwoLeonsStage() {
+        this._twoLeonsTransformTimer?.remove(false);
+        this._twoLeonsTransformTimer = null;
+        for (const visual of this._twoLeonsVisuals || []) this.tweens?.killTweensOf?.(visual);
+        this._twoLeonsStage?.destroy();
+        for (const { npc, visible } of this._twoLeonsHiddenActors || []) {
+            if (npc.active) npc.setVisible(visible);
+        }
+        this._twoLeonsStage = null;
+        this._twoLeonsActors = null;
+        this._twoLeonsVisuals = [];
+        this._twoLeonsHiddenActors = [];
+        this._transformingFalseLeon = false;
+    }
+
+    _playFalseLeonTransformation(onComplete) {
+        if (this._transformingFalseLeon) return;
+        this._createTwoLeonsStage();
+        this._transformingFalseLeon = true;
+        this._isBusy = true;
+        this._player?.lockInput(true);
+        const { fake, real, fakeLabel, realLabel } = this._twoLeonsActors;
+        const x = CONFIG.WIDTH * 0.30, y = CONFIG.HEIGHT * 0.42;
+        fakeLabel.setText('...').setColor('#ff7869');
+        realLabel.setText('LEON — SURVIVANT').setColor('#9ce8bf');
+        fake.setTint(0xff6655);
+        AudioSynth.sfx('boss_hurt');
+        this.tweens.add({ targets: fake, x: { from: x - 5, to: x + 5 },
+            duration: 65, yoyo: true, repeat: 12 });
+        this.tweens.add({ targets: real, x: CONFIG.WIDTH * 0.74, duration: 550, ease: 'Sine.easeOut' });
+
+        const cracks = this.add.graphics();
+        cracks.lineStyle(4, 0xff6655, 1);
+        cracks.beginPath();
+        cracks.moveTo(x - 8, y - 66);
+        cracks.lineTo(x + 7, y - 35);
+        cracks.lineTo(x - 12, y - 10);
+        cracks.lineTo(x + 10, y + 22);
+        cracks.lineTo(x - 6, y + 62);
+        cracks.strokePath();
+        cracks.setAlpha(0);
+        const monster = this.add.image(x, y, 'creature_p1').setDisplaySize(76, 120).setAlpha(0);
+        this._twoLeonsStage.add([monster, cracks]);
+        this._twoLeonsVisuals.push(monster, cracks);
+        this._twoLeonsActors.monster = monster;
+        this.tweens.add({ targets: cracks, alpha: 1, delay: 450, duration: 450 });
+        this.tweens.add({ targets: fake, displayWidth: 130, displayHeight: 180,
+            alpha: 0, delay: 1000, duration: 1100, ease: 'Sine.easeInOut' });
+        this.tweens.add({ targets: cracks, alpha: 0, delay: 1500, duration: 650 });
+        this.tweens.add({ targets: monster, alpha: 1, displayWidth: 150, displayHeight: 200,
+            delay: 1050, duration: 1300, ease: 'Cubic.easeOut' });
+        this._twoLeonsTransformTimer = this.time.delayedCall(2800, () => {
+            fake.setVisible(false);
+            fakeLabel.setText('GENESIS-01').setColor('#ff7869');
+            AudioSynth.sfx('boss_roar');
+            this.cameras.main.shake(300, 0.006);
+            this._twoLeonsTransformTimer = this.time.delayedCall(1000, () => {
+                this._twoLeonsTransformTimer = null;
+                onComplete();
+            });
+        });
+    }
+
     _handleTwoLeonsScene() {
         if (SaveSystem.getFlag(CONFIG.FLAGS.ACT4_LEON_SPLIT)) return;
         if (!this._storyPartyReady()) {
@@ -1432,12 +1567,14 @@ class GameScene extends Phaser.Scene {
             return;
         }
         SaveSystem.setFlag(CONFIG.FLAGS.ACT4_LEON_SPLIT);
+        this._createTwoLeonsStage();
 
         this._isBusy = true;
         this._player?.lockInput(true);
 
         this.scene.launch(CONFIG.SCENES.DIALOGUE, {
             dialogueId: 'act4_two_leons_intro',
+            cinematicBackdrop: true,
             callerScene: CONFIG.SCENES.GAME,
             onComplete: () => {
                 this._showTwoLeonsChoice();
@@ -1446,16 +1583,17 @@ class GameScene extends Phaser.Scene {
     }
 
     _showTwoLeonsChoice() {
+        this._createTwoLeonsStage();
         const W = CONFIG.WIDTH, H = CONFIG.HEIGHT;
         const overlay = this.add.graphics().setScrollFactor(0).setDepth(200);
-        overlay.fillStyle(0x000000, 0.9);
+        overlay.fillStyle(0x000000, 0.18);
         overlay.fillRect(0, 0, W, H);
 
-        const titleText = this.add.text(W / 2, H / 2 - 130, '— IDENTIFY THE REAL LEON —', {
+        const titleText = this.add.text(W / 2, 80, '— IDENTIFY THE REAL LEON —', {
             fontSize: '11px', fontFamily: 'Share Tech Mono', color: '#cc4444', letterSpacing: 4,
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
 
-        const questionText = this.add.text(W / 2, H / 2 - 100, DIALOGUES.act4_two_leons_question[0].text, {
+        const questionText = this.add.text(W / 2, 116, DIALOGUES.act4_two_leons_question[0].text, {
             fontSize: '11px', fontFamily: 'Share Tech Mono', color: '#888', wordWrap: { width: 500 }, align: 'center',
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
 
@@ -1468,7 +1606,7 @@ class GameScene extends Phaser.Scene {
 
         let resolved = false;
         choices.forEach((choice, i) => {
-            const yy = H / 2 - 20 + i * 60;
+            const yy = H * 0.76 + i * 60;
             const bg = this.add.graphics().setScrollFactor(0).setDepth(201);
             bg.fillStyle(0x1a0a0a, 1);
             bg.fillRect(W / 2 - 200, yy - 20, 400, 44);

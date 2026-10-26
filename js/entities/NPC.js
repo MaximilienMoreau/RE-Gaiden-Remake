@@ -103,7 +103,10 @@ class NPC extends Phaser.GameObjects.Container {
     }
 
     showInteractPrompt(visible) {
-        if (this._interactIcon) this._interactIcon.setVisible(visible);
+        if (this._interactIcon) {
+            this._interactIcon.setText(this.isFollowing ? '[T] Talk' : '[E] Talk');
+            this._interactIcon.setVisible(visible);
+        }
     }
 
     interact(gameScene) {
@@ -127,14 +130,31 @@ class NPC extends Phaser.GameObjects.Container {
         const minDist = CONFIG.TILE_SIZE * 1.5;
         const runThreshold = CONFIG.TILE_SIZE * 3.5;
 
-        if (dist > minDist) {
-            const speed = dist > runThreshold ? this._followRunSpeed : this._followSpeed;
-            const angle = Phaser.Math.Angle.Between(this.x, this.y, player.x, player.y);
-            this.body.setVelocity(
-                Math.cos(angle) * speed,
-                Math.sin(angle) * speed
-            );
+        const room = MAPS[this.scene._currentRoomId];
+        const clear = RoomNavigation.hasLineOfSight(room, this.x, this.y, player.x, player.y);
+        if (dist > minDist || !clear) {
+            let waypoint = { x: player.x, y: player.y };
+            if (RoomNavigation.hasLineOfSight(room, this.x, this.y, player.x, player.y, 12)) {
+                this._followPath = null;
+            } else {
+                const targetTile = `${Math.floor(player.x / CONFIG.TILE_SIZE)},${Math.floor(player.y / CONFIG.TILE_SIZE)}`;
+                if (!this._followPath?.length || this._pathTarget !== targetTile || time >= (this._nextPathAt || 0)) {
+                    this._followPath = RoomNavigation.findPath(room, this.x, this.y, player.x, player.y);
+                    this._pathTarget = targetTile;
+                    this._nextPathAt = time + 500;
+                }
+                while (this._followPath.length && Math.hypot(this._followPath[0].x - this.x, this._followPath[0].y - this.y) < 3) this._followPath.shift();
+                waypoint = this._followPath[0];
+            }
+            if (waypoint) {
+                const dx = waypoint.x - this.x, dy = waypoint.y - this.y;
+                const distance = Math.hypot(dx, dy);
+                const speed = Math.min(dist > runThreshold ? this._followRunSpeed : this._followSpeed,
+                    distance / Math.max(delta / 1000, 0.001));
+                this.body.setVelocity(distance ? dx / distance * speed : 0, distance ? dy / distance * speed : 0);
+            } else this.body.setVelocity(0, 0);
         } else {
+            this._followPath = null;
             this.body.setVelocity(0, 0);
         }
 
@@ -143,7 +163,7 @@ class NPC extends Phaser.GameObjects.Container {
             for (const enemy of enemies) {
                 if (!enemy || !enemy.alive) continue;
                 const eDist = Phaser.Math.Distance.Between(this.x, this.y, enemy.x, enemy.y);
-                if (eDist < this._attackRange) {
+                if (eDist < this._attackRange && RoomNavigation.hasLineOfSight(room, this.x, this.y, enemy.x, enemy.y)) {
                     enemy.takeDamage(this._attackDamage);
                     this._attackCooldown = 1500;
                     break;

@@ -396,7 +396,7 @@ class TitleScene extends Phaser.Scene {
         const controls = [
             ['Move',                           'WASD  /  ARROWS'],
             ['Run',                            'SHIFT  (hold)'],
-            ['Interact / Pick up',             'E'],
+            ['Interact / Pick up',             'E  ·  T — Talk to companions'],
             ['Open Inventory',                 'I'],
             ['Reload',                         'R'],
         ];

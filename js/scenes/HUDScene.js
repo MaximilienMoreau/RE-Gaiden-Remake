@@ -42,7 +42,7 @@ class HUDScene extends Phaser.Scene {
         this._ammoBarBg.fillStyle(0x2b3542).fillRect(W - 234, H - 44, 194, 3);
         this._ammoBar = this.add.graphics();
         this._actText = text(W - 26, 24, '', 10, '#b5c0cd', true).setOrigin(1, 0);
-        this._controlsHint = text(W / 2, H - 17, '[E] Interagir    [I] Inventaire    [R] Recharger', 10, '#a8b3c0', true).setOrigin(0.5, 1);
+        this._controlsHint = text(W / 2, H - 17, '[E] Ramasser / Interagir    [T] Compagnons    [I] Inventaire    [R] Recharger', 10, '#a8b3c0', true).setOrigin(0.5, 1);
         this._dangerOverlay = this.add.graphics().setAlpha(0);
         this._dangerOverlay.fillStyle(0xd65a54, 0.08).fillRect(0, 0, W, H);
         this._dangerTween = null;
