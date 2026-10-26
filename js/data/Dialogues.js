@@ -19,7 +19,7 @@ const DIALOGUES = {
         { speaker: 'SYSTEM', text: 'Barry was dropped by helicopter onto the Starlight\'s\naft deck at 02:14 hours.', style: 'system' },
         { speaker: 'SYSTEM', text: 'He was told to find Leon. Find the girl. Get them out.', style: 'system' },
         { speaker: 'BARRY', text: 'Leon, you had better be alive. I did not come all this way to carry a body bag.', portrait: 'barry' },
-        { speaker: 'SYSTEM', text: 'He\'d said the same thing once before. In a mansion, a lifetime ago.', style: 'dim' },
+        { speaker: 'SYSTEM', text: 'The words sounded braver than he felt.', style: 'dim' },
     ],
 
     prologue_arrived: [
@@ -38,146 +38,146 @@ const DIALOGUES = {
     // ACT 1 — FIRST MEETING WITH LEON
     // =========================================================
     act1_leon_first_meeting: [
-        { speaker: 'BARRY', text: 'Leon. Leon Kennedy — is that you?', portrait: 'barry' },
-        { speaker: 'LEON', text: 'Barry? What are you doing here? USSTRATCOM sent you?', portrait: 'leon' },
-        { speaker: 'LEON', text: '[His eyes drop to the handgun in Barry\'s hand]', style: 'action' },
-        { speaker: 'LEON', text: '...That\'s my P226.', portrait: 'leon' },
-        { speaker: 'BARRY', text: 'Found it in one of the cabins on Deck 3. Figured it beat going in empty-handed.', portrait: 'barry' },
-        { speaker: 'LEON', text: 'Keep it. I picked up a Glock from the ship\'s security locker before the radio went down. You\'ll need both barrels before this is over.', portrait: 'leon' },
-        { speaker: 'BARRY', text: 'They called in a favor. Said you went dark six hours ago. I figured... hell, I figured someone had to come.', portrait: 'barry' },
-        { speaker: 'LEON', text: 'I got separated. Lost my radio on deck two. It\'s bad, Barry. Worse than the intel said.', portrait: 'leon' },
-        { speaker: 'BARRY', text: 'I noticed. Full outbreak — every deck, every corridor. And something else. Something I shot twice and it kept walking.', portrait: 'barry' },
-        { speaker: 'LEON', text: '[He nods grimly]', style: 'action' },
-        { speaker: 'LEON', text: 'I\'ve seen it too. It\'s out of Container REG-07 — the one that wasn\'t on the manifest. Adaptive mimicry. I\'ve seen classified files on the concept but never a deployment.', portrait: 'leon' },
-        { speaker: 'BARRY', text: 'It looked at me like it was thinking. Like it was... memorizing me.', portrait: 'barry' },
-        { speaker: 'LEON', text: 'That\'s exactly what it was doing. Where\'s the girl, Barry? LUCIA — Subject KD-1. She\'s the reason this ship exists.', portrait: 'leon' },
-        { speaker: 'BARRY', text: 'Last seen heading through the restaurant toward the lower decks. Fast. Smart. Left a note — says she\'s trying to reach a service boat in the engine room.', portrait: 'barry' },
-        { speaker: 'LEON', text: 'Then that\'s where we go.', portrait: 'leon' },
-        { speaker: 'BARRY', text: 'Together?', portrait: 'barry' },
-        { speaker: 'LEON', text: 'You came all this way alone. Yeah, together.', portrait: 'leon' },
+        {"speaker": "BARRY", "text": "Leon Kennedy?"},
+        {"speaker": "LEON", "text": "Barry Burton. They sent you?"},
+        {"speaker": "BARRY", "text": "You missed your check-in. I owed someone a favor."},
+        {"speaker": "SYSTEM", "text": "[Leon notices the P226 among Barry's equipment.]", "style": "action", "condition": "handgun_owned"},
+        {"speaker": "LEON", "text": "You found my P226. Keep it. I have a spare from the security locker.", "condition": "handgun_owned"},
+        {"speaker": "LEON", "text": "I left my P226 in Cabin 102. If you need a firearm, check there. I found a spare in the security locker.", "condition": "handgun_missing"},
+        {"speaker": "BARRY", "text": "Found your P226. It's in a safe-room box.", "condition": "handgun_stored"},
+        {"speaker": "LEON", "text": "Keep it handy. I found a spare in the security locker.", "condition": "handgun_stored"},
+        {"speaker": "BARRY", "text": "Found a P226 in a cabin. Left it behind.", "condition": "handgun_lost"},
+        {"speaker": "LEON", "text": "That was mine. I've got a spare. We'll manage.", "condition": "handgun_lost"},
+        {"speaker": "LEON", "text": "I lost my radio on deck two. The lower decks are overrun."},
+        {"speaker": "BARRY", "text": "Your note mentioned something bigger than a zombie.", "condition": "read_note_leon"},
+        {"speaker": "BARRY", "text": "What happened to the crew?", "condition": "unread_note_leon"},
+        {"speaker": "LEON", "text": "An outbreak. And something else escaped from a sealed container. I couldn't stop it."},
+        {"speaker": "BARRY", "text": "And Lucia?", "condition": "lucia_absent"},
+        {"speaker": "LEON", "text": "Last time I saw her, she was heading for the engine room. She said there was a service boat route.", "condition": "lucia_absent"},
+        {"speaker": "BARRY", "text": "Lucia is with me. The service boat is gone. We need another way out.", "condition": "lucia_present"},
+        {"speaker": "LEON", "text": "Then we look together.", "condition": "lucia_present"},
+        {"speaker": "BARRY", "text": "Chris Redfield told me you escaped Raccoon City with his sister, Claire."},
+        {"speaker": "LEON", "text": "Claire kept me alive. I'd like to thank her in person."},
+        {"speaker": "BARRY", "text": "Stay close. We find a way out together."},
+        {"speaker": "LEON", "text": "Together."},
     ],
 
     // =========================================================
     // ACT 1 — LEON AS COMPANION (after first meeting)
     // =========================================================
     leon_companion: [
-        { speaker: 'LEON', text: 'Keep moving. We need to reach the lower decks before this gets worse.', portrait: 'leon' },
+        { speaker: 'LEON', text: 'Stay close. We all leave this ship together.', portrait: 'leon' },
     ],
 
     // =========================================================
     // ACT 1 — FINDING LEON'S NOTE (before meeting)
     // =========================================================
     act1_leon_note_found: [
-        { speaker: 'BARRY', text: 'Leon\'s handwriting. He made it this far.', portrait: 'barry' },
-        { speaker: 'BARRY', text: '"Don\'t trust anyone who looks like you." What the hell does that mean?', portrait: 'barry' },
+        {"speaker": "BARRY", "text": "Leon's handwriting. He made it this far."},
+        {"speaker": "BARRY", "text": "\"Don't trust anyone who looks like me.\" What did you see, Leon?"},
     ],
 
     // =========================================================
     // ACT 2 — LUCIA FIRST MEETING
     // =========================================================
     act2_lucia_found: [
-        { speaker: 'LUCIA', text: '—STAY BACK—', portrait: 'lucia' },
-        { speaker: 'LEON', text: 'Easy. Easy. I\'m not one of them. My name is Leon Kennedy. USSTRATCOM. I\'m looking for you, Lucia.', portrait: 'leon' },
-        { speaker: 'LUCIA', text: '...How do you know my name?', portrait: 'lucia' },
-        { speaker: 'LEON', text: 'Because I was sent to find you. You\'re safe now.', portrait: 'leon' },
-        { speaker: 'LUCIA', text: '[She stares at him for a long moment]', style: 'action' },
-        { speaker: 'LUCIA', text: 'You survived Raccoon City.', portrait: 'lucia' },
-        { speaker: 'LEON', text: 'How do you know about that?', portrait: 'leon' },
-        { speaker: 'LUCIA', text: 'Umbrella kept files on the survivors. They talked about you. Said you were... unpredictable.', portrait: 'lucia' },
-        { speaker: 'LEON', text: 'They weren\'t wrong. Are you hurt?', portrait: 'leon' },
-        { speaker: 'LUCIA', text: 'I don\'t get hurt. Not by... this. I never have.', portrait: 'lucia' },
-        { speaker: 'BARRY', text: 'That\'s the Kodiak factor. Her blood produces antibodies that neutralize the T-virus at first contact.', portrait: 'barry' },
-        { speaker: 'LEON', text: 'Which makes her the most important person on this ship.', portrait: 'leon' },
-        { speaker: 'LUCIA', text: 'I\'m not a test subject anymore.', portrait: 'lucia' },
-        { speaker: 'LEON', text: 'No. You\'re a survivor. There\'s a difference.', portrait: 'leon' },
+        {"speaker": "LUCIA", "text": "Stay back!"},
+        {"speaker": "LEON", "text": "Easy. I'm Leon Kennedy. This is Barry. We came to get you out.", "condition": "leon_present"},
+        {"speaker": "BARRY", "text": "Easy. Barry Burton. I was sent to find you, Lucia.", "condition": "leon_absent"},
+        {"speaker": "LUCIA", "text": "You know my name?"},
+        {"speaker": "BARRY", "text": "It was in the briefing. That's all. Are you hurt?"},
+        {"speaker": "LUCIA", "text": "They bit me. Nothing happened. The doctors kept trying to find out why."},
+        {"speaker": "BARRY", "text": "Your letter called it the Kodiak factor. Is that why they kept you?", "condition": "read_lucia_letter"},
+        {"speaker": "LUCIA", "text": "That's what they called it. They took my blood for years.", "condition": "read_lucia_letter"},
+        {"speaker": "BARRY", "text": "You don't have to tell us everything now. Can you walk?", "condition": "unread_lucia_letter"},
+        {"speaker": "LUCIA", "text": "Matthews gave me an emergency serum before I escaped. Said it might help someone bitten. He only had one dose."},
+        {"speaker": "BARRY", "text": "Keep it safe."},
+        {"speaker": "LUCIA", "text": "I can walk. But the service boat is gone. They cut it loose."},
+        {"speaker": "BARRY", "text": "Then we find another way."},
+        {"speaker": "LUCIA", "text": "I'm not going back in a cage."},
+        {"speaker": "BARRY", "text": "You're coming with me. No cages."},
     ],
 
     // =========================================================
     // ACT 2 — ENTERING THE ENGINE ROOM
     // =========================================================
     act2_engine_room: [
-        { speaker: 'BARRY', text: 'Something moved down here. Not a zombie. Too fast.', portrait: 'barry' },
-        { speaker: 'LEON', text: 'Licker?', portrait: 'leon' },
-        { speaker: 'BARRY', text: 'Wrong size. Wrong shape.', portrait: 'barry' },
-        { speaker: 'LUCIA', text: 'It was The Creature. I saw it follow you from the restaurant.', portrait: 'lucia' },
-        { speaker: 'LEON', text: 'It\'s been tracking us?', portrait: 'leon' },
-        { speaker: 'LUCIA', text: 'No. It\'s been watching. There\'s a difference.', portrait: 'lucia' },
-        { speaker: 'BARRY', text: '...She sounds like you, Leon.', portrait: 'barry' },
+        {"speaker": "SYSTEM", "text": "[A heavy scrape echoes beyond the engine room door.]", "style": "action"},
+        {"speaker": "BARRY", "text": "That's no engine."},
+        {"speaker": "LEON", "text": "Keep away from the ceiling. I'll watch our backs.", "condition": "leon_present"},
+        {"speaker": "LUCIA", "text": "Something followed me down here. It waits until you stop looking.", "condition": "lucia_present"},
+        {"speaker": "BARRY", "text": "Keep moving."},
     ],
 
     // =========================================================
     // ACT 3 — DISCOVERING THE LAB
     // =========================================================
     act3_lab_discovery: [
-        { speaker: 'LEON', text: 'This wasn\'t on the ship\'s manifest. A fully equipped lab. They built this in the cargo hold.', portrait: 'leon' },
-        { speaker: 'BARRY', text: 'How long do you think this has been here?', portrait: 'barry' },
-        { speaker: 'LEON', text: 'Based on the equipment... at least two years. This ship was converted long before this voyage.', portrait: 'leon' },
-        { speaker: 'LUCIA', text: 'I was here. In that containment chamber.', portrait: 'lucia' },
-        { speaker: 'LEON', text: 'Lucia...', portrait: 'leon' },
-        { speaker: 'LUCIA', text: 'It\'s fine. I know what they did to me. I\'ve made peace with it. What I want to know is why that... thing... is here on the same ship.', portrait: 'lucia' },
-        { speaker: 'BARRY', text: 'They were trying to synthesize your immunity. Use your antibodies as a template to create a BOW that could survive anything — any pathogen, any environment.', portrait: 'barry' },
-        { speaker: 'BARRY', text: 'The Creature is the prototype. An organism designed to absorb and replicate biological information from any living host.', portrait: 'barry' },
-        { speaker: 'LEON', text: 'Absorb and replicate. Including... people.', portrait: 'leon' },
-        { speaker: 'BARRY', text: '...Yeah.', portrait: 'barry' },
-        { speaker: 'LUCIA', text: 'We have to destroy it. Not just escape. We have to make sure it never leaves this ship.', portrait: 'lucia' },
-        { speaker: 'LEON', text: 'Agreed.', portrait: 'leon' },
+        {"speaker": "SYSTEM", "text": "[Umbrella equipment fills the service corridor. A sign points toward the laboratory.]", "style": "action"},
+        {"speaker": "BARRY", "text": "A laboratory. Hidden below the passenger decks."},
+        {"speaker": "LEON", "text": "The cargo was a cover. They were working down here.", "condition": "leon_present"},
+        {"speaker": "LUCIA", "text": "I know that door. Please don't leave me here.", "condition": "lucia_present"},
+        {"speaker": "BARRY", "text": "The memo calls it GENESIS. It says the creature can copy people.", "condition": "read_umbrella_memo"},
+        {"speaker": "BARRY", "text": "There must be records inside. We need to know what escaped.", "condition": "unread_umbrella_memo"},
+        {"speaker": "BARRY", "text": "Stay close. We check the lab, then find a way off this ship."},
     ],
 
     // =========================================================
     // ACT 3 — CREATURE FIRST SIGHTING
     // =========================================================
     act3_creature_revealed: [
-        { speaker: 'SYSTEM', text: '...', style: 'dim' },
-        { speaker: 'BARRY', text: 'Leon. Leon get away from—', portrait: 'barry' },
-        { speaker: 'SYSTEM', text: '[THE CREATURE MOVES]', style: 'red' },
-        { speaker: 'LEON', text: 'BARRY! SHOOT IT—', portrait: 'leon' },
-        { speaker: 'SYSTEM', text: '[GUNFIRE. DARKNESS. SILENCE.]', style: 'red' },
+        {"speaker": "SYSTEM", "text": "[A wet scraping sound comes from behind the containment chamber.]", "style": "action"},
+        {"speaker": "LUCIA", "text": "It's here."},
+        {"speaker": "BARRY", "text": "Leon. Behind you!"},
+        {"speaker": "SYSTEM", "text": "[A limb catches Leon's arm. He fires as Barry pulls him free. The emergency lights fail.]", "style": "red"},
+        {"speaker": "LEON", "text": "It got something into my arm. Barry—"},
+        {"speaker": "SYSTEM", "text": "[Metal tears. In the darkness, something retreats toward the cargo hold.]", "style": "action"},
+        {"speaker": "LUCIA", "text": "Leon? Barry? I can't see you!"},
+        {"speaker": "BARRY", "text": "Follow my voice. Into the hold. Together."},
     ],
 
     // =========================================================
     // ACT 4 — THE TWO LEONS SCENE (BARRY POV)
     // =========================================================
     act4_two_leons_intro: [
-        { speaker: 'BARRY', text: 'Leon? Leon, is that you?', portrait: 'barry' },
-        { speaker: 'LEON_A', text: 'Barry. It got me. I barely got free. Where\'s Lucia?', portrait: 'leon' },
-        { speaker: 'BARRY', text: 'She\'s... Barry stops. He hears another sound.', style: 'action' },
-        { speaker: 'LEON_B', text: 'Barry. Don\'t listen to it. That isn\'t me.', portrait: 'leon' },
-        { speaker: 'BARRY', text: '...Both of you look exactly like Leon. Sound like him. Walk like him.', portrait: 'barry' },
-        { speaker: 'LEON_A', text: 'I\'m Leon. That thing is The Creature. It absorbed my DNA when it grabbed me in the lab corridor.', portrait: 'leon' },
-        { speaker: 'LEON_B', text: 'Barry, think. Raccoon City. The RPD basement. What did I tell you when we spoke after I got out?', portrait: 'leon' },
-        { speaker: 'BARRY', text: 'I never spoke to you after Raccoon City.', portrait: 'barry' },
-        { speaker: 'LEON_B', text: 'Exactly. Because we\'ve never met before today. The real Leon would know that.', portrait: 'leon' },
-        { speaker: 'LEON_A', text: '...', style: 'dim' },
-        { speaker: 'BARRY', text: 'There\'s only one way to know for certain.', portrait: 'barry' },
-        { speaker: 'BARRY', text: '[Barry raises the .357]', style: 'action' },
-        { speaker: 'BARRY', text: 'USSTRATCOM authentication code. Both of you. Now.', portrait: 'barry' },
+        {"speaker": "SYSTEM", "text": "[Two identical figures step out from opposite sides of the hold.]", "style": "action"},
+        {"speaker": "BARRY", "text": "Leon?"},
+        {"speaker": "LEON_A", "text": "Barry. Keep Lucia behind you. That thing followed us."},
+        {"speaker": "LEON_B", "text": "Don't go near him. Look at me, Barry."},
+        {"speaker": "SYSTEM", "text": "[Barry stops Lucia from stepping forward.]", "style": "action"},
+        {"speaker": "BARRY", "text": "Same face. Same voice."},
+        {"speaker": "LEON_A", "text": "You saw it grab me. It must have copied me then."},
+        {"speaker": "LEON_B", "text": "I don't know what it remembers. Ask us something."},
+        {"speaker": "BARRY", "text": "Something from before this ship. Both of you answer."},
+        {"speaker": "SYSTEM", "text": "", "style": "action", "variant": "ready_weapon"},
+        {"speaker": "BARRY", "text": "What was the name of the woman you escaped Raccoon City with?"},
     ],
 
     act4_two_leons_question: [
-        { speaker: 'BARRY', text: 'What was the name of the girl Leon escaped Raccoon City with?', portrait: 'barry' },
-        // This is a choice scene - handled by code
+        {"speaker": "BARRY", "text": "What was the name of the woman you escaped Raccoon City with?"},
     ],
 
     act4_real_leon_identified: [
-        { speaker: 'BARRY', text: 'Claire Redfield.', portrait: 'barry' },
-        { speaker: 'BARRY', text: '...You got it right.', portrait: 'barry' },
-        { speaker: 'BARRY', text: 'The other one didn\'t.', portrait: 'barry' },
-        { speaker: 'LEON', text: 'Barry. It\'s okay. Do it.', portrait: 'leon' },
-        { speaker: 'BARRY', text: '[Barry fires. The Creature reels — its disguise fracturing, flesh splitting, something else pushing through.]', style: 'action' },
-        { speaker: 'SYSTEM', text: 'THE CREATURE HAS SHED ITS LEON FORM.', style: 'red' },
-        { speaker: 'SYSTEM', text: 'FINAL ENCOUNTER INITIATED.', style: 'red' },
+        {"speaker": "BARRY", "text": "Claire Redfield. That's the name Chris gave me."},
+        {"speaker": "LEON", "text": "Her brother was S.T.A.R.S., like you. Barry, get Lucia back."},
+        {"speaker": "SYSTEM", "text": "[The other Leon reaches for Lucia. Barry puts himself between them.]", "style": "action"},
+        {"speaker": "SYSTEM", "text": "[The false Leon's face splits. Its borrowed voice becomes a shriek.]", "style": "red"},
+        {"speaker": "BARRY", "text": "You picked the wrong face."},
+        {"speaker": "SYSTEM", "text": "FINAL ENCOUNTER INITIATED.", "style": "red"},
     ],
 
     act4_lucia_saves_leon: [
-        { speaker: 'LUCIA', text: 'Leon. You need to hold still.', portrait: 'lucia' },
-        { speaker: 'LEON', text: 'What are you... Lucia—', portrait: 'leon' },
-        { speaker: 'LUCIA', text: 'I told you. I\'m not a test subject anymore. But maybe I can still do some good.', portrait: 'lucia' },
-        { speaker: 'LEON', text: 'Your blood—', portrait: 'leon' },
-        { speaker: 'LUCIA', text: 'Will neutralize whatever it injected into you when it absorbed your template. Trust me.', portrait: 'lucia' },
-        { speaker: 'LEON', text: '...I trust you.', portrait: 'leon' },
-        { speaker: 'SYSTEM', text: '[Lucia injects a syringe of her own blood. Leon convulses — then stills.]', style: 'action' },
-        { speaker: 'LEON', text: 'I feel... I feel like myself again.', portrait: 'leon' },
-        { speaker: 'BARRY', text: 'Good. Because we need to go. This ship isn\'t going to last.', portrait: 'barry' },
+        {"speaker": "SYSTEM", "text": "[Leon sinks against a crate, clutching the wound in his arm.]", "style": "action"},
+        {"speaker": "LUCIA", "text": "Leon. Hold still."},
+        {"speaker": "LEON", "text": "It's spreading. I can feel it."},
+        {"speaker": "LUCIA", "text": "Matthews made an emergency serum from my blood. He gave me one dose before I escaped."},
+        {"speaker": "SYSTEM", "text": "[Lucia takes a sealed injector from her pocket.]", "style": "action"},
+        {"speaker": "BARRY", "text": "Will it work?"},
+        {"speaker": "LUCIA", "text": "He thought it would. It's all I've got."},
+        {"speaker": "LEON", "text": "Do it."},
+        {"speaker": "SYSTEM", "text": "[She presses the injector against his arm. His breathing slowly steadies.]", "style": "action"},
+        {"speaker": "LEON", "text": "I can stand. Help me up."},
+        {"speaker": "BARRY", "text": "Good. We're leaving. Now."},
     ],
 
     // =========================================================
@@ -186,10 +186,10 @@ const DIALOGUES = {
     ending_escape: [
         { speaker: 'SYSTEM', text: 'The Starlight began to list at 04:47 hours.', style: 'system' },
         { speaker: 'SYSTEM', text: 'The Creature\'s destruction had ruptured critical systems in the cargo hold.', style: 'system' },
-        { speaker: 'SYSTEM', text: 'Leon, Barry, and Lucia reached the aft deck with six minutes to spare.', style: 'system' },
-        { speaker: 'LEON', text: 'USSTRATCOM, this is Kennedy. We have the package. Three for extraction. Coordinates to follow.', portrait: 'leon' },
+        { speaker: 'SYSTEM', text: 'Leon, Barry, and Lucia reached the aft deck at 04:56. Six minutes before the ship went under.', style: 'system' },
+        { speaker: 'LEON', text: 'USSTRATCOM, this is Kennedy. We have Lucia. Three survivors for extraction. Coordinates to follow.', portrait: 'leon' },
         { speaker: 'USSTRATCOM', text: 'Copy that, Kennedy. Helicopter en route. ETA four minutes.', style: 'radio' },
-        { speaker: 'BARRY', text: 'Four minutes. We\'ve got four minutes watching this thing sink.', portrait: 'barry' },
+        { speaker: 'BARRY', text: 'Four minutes. Stay together. Watch the rail.', portrait: 'barry' },
         { speaker: 'LUCIA', text: 'All those people...', portrait: 'lucia' },
         { speaker: 'LEON', text: 'We couldn\'t save them. We can make sure it doesn\'t happen again.', portrait: 'leon' },
         { speaker: 'BARRY', text: 'How? Umbrella is still out there. Scattered, sure. But out there.', portrait: 'barry' },
@@ -215,29 +215,29 @@ const DIALOGUES = {
     // NPC AMBIENT LINES
     // =========================================================
     barry_monologue: [
-        'Raccoon City was supposed to be the last time.',
-        'The smell of it. You never forget it.',
-        'Leon — where are you. Stay alive.',
-        'Find Leon. Find the girl. Get out. Simple. Nothing is ever simple.',
-        'Jill would have something smart to say right now.',
-        'I told my family I was going fishing.',
+        {"speaker": "BARRY", "text": "Raccoon City was supposed to be the last time."},
+        {"speaker": "BARRY", "text": "The smell of it. You never forget it."},
+        {"speaker": "BARRY", "text": "Leon — where are you. Stay alive."},
+        {"speaker": "BARRY", "text": "Find Leon. Find the girl. Get out. Simple. Nothing is ever simple."},
+        {"speaker": "BARRY", "text": "Jill would have something smart to say right now."},
+        {"speaker": "BARRY", "text": "I told my family I was going fishing."},
     ],
 
     leon_ambient: [
-        'Stay close. The corridors narrow up ahead.',
-        'I\'ve got 38 rounds left. Make them count.',
-        'This smell... same as Raccoon City. God, I never wanted to smell this again.',
-        'Keep your eyes up. They don\'t always come at ground level.',
-        'These lickers are sensitive to sound. Walk slow.',
-        'Barry\'s holding something back. He always does when something scares him.',
+        {"speaker": "LEON", "text": "Stay close. The corridors narrow up ahead."},
+        {"speaker": "LEON", "text": "Save your ammunition. We don't know what's ahead."},
+        {"speaker": "LEON", "text": "This smell... same as Raccoon City. God, I never wanted to smell this again."},
+        {"speaker": "LEON", "text": "Keep your eyes up. They don't always come at ground level."},
+        {"speaker": "LEON", "text": "Watch the ceiling. They can come from anywhere."},
+        {"speaker": "LEON", "text": "You went quiet, Barry. Did you see something?"},
     ],
 
     lucia_ambient: [
-        'There were 12 of us in the lab. I\'m the only one left.',
-        'The doctor who helped me... his name was Dr. Matthews. Please don\'t let him be forgotten.',
-        'I can feel when The Creature is near. Something changes in the air.',
-        'My mother\'s name is Elena. She\'s in Lyon. Please remember that.',
-        'I\'m not afraid of the zombies. I just feel sorry for them.',
+        {"speaker": "LUCIA", "text": "There were 12 of us in the lab. I'm the only one left."},
+        {"speaker": "LUCIA", "text": "The doctor who helped me... his name was Dr. Matthews. Please don't let him be forgotten."},
+        {"speaker": "LUCIA", "text": "That scraping sound... I heard it outside my cell."},
+        {"speaker": "LUCIA", "text": "My mother's name is Elena. She's in Lyon. Please remember that."},
+        {"speaker": "LUCIA", "text": "I'm not afraid of the zombies. I just feel sorry for them."},
     ],
 
     // =========================================================
@@ -246,7 +246,7 @@ const DIALOGUES = {
     save_room_quotes: [
         '"The difference between a soldier and a survivor is that a survivor knows when to rest." — Unknown',
         '"Every moment of quiet is borrowed time." — L.K.',
-        '"I had a daughter about Lucia\'s age once. In another life." — B.B.',
+        '"Lucia reminds me of my daughters. I promised them I would come home." — B.B.',
         '"These walls remember when this was a living ship. They don\'t yet know what it\'s become." — Unknown passenger',
         '"Write it down. The names. The faces. Then get up and fight." — L.K.',
         '"Umbrella made so many of these things. How many of them are out there, scattered? How many ships haven\'t been found yet?" — B.B.',

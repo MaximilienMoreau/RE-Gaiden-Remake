@@ -368,7 +368,7 @@ const MAPS = {
             { type: 'item', tx: 2, ty: 8, itemId: 'herb_green' },
             { type: 'item', tx: 13, ty: 9, itemId: 'key_cargo' },
             { type: 'cutscene_trigger', tx: 8, ty: 5, cutsceneId: 'act2_engine_room', once: true },
-            { type: 'npc', tx: 7, ty: 8, npcId: 'lucia_first_meeting', dialogueId: 'act2_lucia_found', once: true },
+            { type: 'npc', tx: 7, ty: 8, npcId: 'lucia_first_meeting', dialogueId: 'act2_lucia_found', once: true, condition: 'lucia_not_found' },
         ],
         connections: {
             north: { tx: 7, ty: 1, targetRoom: 'lower_corridor_a', targetTx: 9, targetTy: 5 },

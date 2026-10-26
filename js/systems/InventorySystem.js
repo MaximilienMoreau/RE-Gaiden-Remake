@@ -42,6 +42,7 @@ const InventorySystem = {
 
     removeItem(itemId, quantity = 1) {
         const state = SaveSystem.getState();
+        if (itemId === 'knife') return false;
         if (!state || !Number.isInteger(quantity) || quantity <= 0 ||
             this.getItemCount(itemId) < quantity) return false;
         let remaining = quantity;
@@ -199,10 +200,11 @@ const InventorySystem = {
         const state = SaveSystem.getState();
         if (!state) return false;
         if (!this.hasItem(itemId)) return false;
-        // Prevent depositing the equipped weapon while it has ammo loaded in the chamber.
-        if (state.equippedWeapon === itemId && state.equippedWeaponAmmo > 0) return false;
+        if (itemId === 'knife') return false;
         this.removeItem(itemId);
-        state.itemBox.push({ id: itemId, qty: 1 });
+        const stored = state.itemBox.find(slot => slot.id === itemId);
+        if (stored) stored.qty++;
+        else state.itemBox.push({ id: itemId, qty: 1 });
         return true;
     },
 

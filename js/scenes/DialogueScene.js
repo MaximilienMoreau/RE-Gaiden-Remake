@@ -19,6 +19,7 @@ class DialogueScene extends Phaser.Scene {
         this._npcId = data.npcId;
         this._callerScene = data.callerScene || CONFIG.SCENES.GAME;
         this._onComplete = data.onComplete;
+        this._fileId = data.fileId;
     }
 
     create() {
@@ -35,6 +36,7 @@ class DialogueScene extends Phaser.Scene {
             this._closeDialogue();
             return;
         }
+        this._lines = this._prepareLines(this._lines);
         this._lineIndex = 0;
 
         // Semi-transparent overlay
@@ -79,6 +81,10 @@ class DialogueScene extends Phaser.Scene {
             lineSpacing: 5,
         }).setDepth(13);
 
+        // Paginate documents using the actual font and available text width.
+        // Five lines fit above the dialogue prompts, including line spacing.
+        this._paginateLines();
+
         // Line counter
         this._counterText = this.add.text(W - 30, boxY + boxH - 18, '', {
             fontSize: '9px', fontFamily: UITheme.font, color: '#8492a3',
@@ -108,6 +114,50 @@ class DialogueScene extends Phaser.Scene {
         // Start
         this.cameras.main.fadeIn(200, 0, 0, 0);
         this.time.delayedCall(100, () => this._showLine());
+    }
+
+    _prepareLines(lines) {
+        const state = SaveSystem.getState();
+        const handgunOwned = InventorySystem.hasItem('handgun');
+        const handgunStored = InventorySystem.getItemBox().some(item => item.id === 'handgun');
+        const handgunCollected = Object.values(MAPS).some(room => room.objects.some((obj, index) =>
+            obj.itemId === 'handgun' && SaveSystem.isItemCollected(room.id, index)));
+        const conditions = {
+            leon_present: SaveSystem.getFlag(CONFIG.FLAGS.ACT1_LEON_FOUND),
+            lucia_present: SaveSystem.getFlag(CONFIG.FLAGS.ACT2_LUCIA_LOCATED),
+            handgun_owned: handgunOwned,
+            handgun_stored: !handgunOwned && handgunStored,
+            handgun_lost: !handgunOwned && !handgunStored && !!handgunCollected,
+            handgun_missing: !handgunOwned && !handgunStored && !handgunCollected,
+        };
+        conditions.leon_absent = !conditions.leon_present;
+        conditions.lucia_absent = !conditions.lucia_present;
+        for (const id of ['note_leon', 'lucia_letter', 'umbrella_memo']) {
+            conditions[`read_${id}`] = !!state?.flags?.[`file_read_${id}`];
+            conditions[`unread_${id}`] = !conditions[`read_${id}`];
+        }
+        return lines.filter(line => !line.condition || conditions[line.condition] === true).map(line => {
+            if (line.variant !== 'ready_weapon') return { ...line };
+            const weapon = InventorySystem.getEquippedWeapon();
+            let text = '[Barry keeps his hands ready and steps in front of Lucia.]';
+            if (weapon?.def?.subtype === 'melee') text = '[Barry draws his combat knife and keeps Lucia behind him.]';
+            else if (weapon?.def?.subtype === 'gun') {
+                text = weapon.ammo > 0 ? `[Barry raises his ${weapon.def.name}.]` :
+                    `[Barry grips his empty ${weapon.def.name}, keeping his knife within reach.]`;
+            }
+            return { ...line, text };
+        });
+    }
+
+    _paginateLines() {
+        this._lines = this._lines.flatMap(line => {
+            const wrapped = this._mainText.getWrappedText(line.text);
+            const pages = [];
+            for (let i = 0; i < wrapped.length; i += 5) {
+                pages.push({ ...line, text: wrapped.slice(i, i + 5).join('\n') });
+            }
+            return pages.length ? pages : [line];
+        });
     }
 
     _showLine() {
@@ -213,6 +263,9 @@ class DialogueScene extends Phaser.Scene {
         this._typeInterval = null;
         this.cameras.main.fadeOut(200, 0, 0, 0, (cam, progress) => {
             if (progress === 1) {
+                if (InventorySystem._getDef(this._fileId)?.type === 'file') {
+                    SaveSystem.setFlag(`file_read_${this._fileId}`);
+                }
                 this.scene.stop();
                 EventSystem.emit('dialogue_closed', { dialogueId: this._dialogueId });
                 if (this._onComplete) this._onComplete();

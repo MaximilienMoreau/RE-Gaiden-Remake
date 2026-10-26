@@ -315,10 +315,19 @@ class InventoryScene extends Phaser.Scene {
                 this._close();
             }});
         }
+        if (def.type === 'ammo' && InventorySystem.getEquippedWeapon()?.def?.ammoType === def.id) {
+            actions.push({ label: 'RELOAD', color: '#88ff99', fn: () => {
+                if (InventorySystem.reload()) {
+                    AudioSynth.sfx('reload');
+                    this._close();
+                }
+            }});
+        }
         if (def.type === 'file') {
             actions.push({ label: 'READ', color: '#ffdd88', fn: () => {
                 this.scene.launch(CONFIG.SCENES.DIALOGUE, {
                     singleText: def.fileContent || def.examineText || def.desc,
+                    fileId: def.id,
                     callerScene: CONFIG.SCENES.INVENTORY,
                 });
             }});
@@ -341,7 +350,7 @@ class InventoryScene extends Phaser.Scene {
                 });
             }});
         }
-        if (def.type !== 'key') actions.push({ label: 'DISCARD', color: '#cc6666', fn: () => {
+        if (def.type !== 'key' && def.id !== 'knife') actions.push({ label: 'DISCARD', color: '#cc6666', fn: () => {
             InventorySystem.removeItem(def.id);
             this._close();
         }});
@@ -419,17 +428,26 @@ class InventoryScene extends Phaser.Scene {
                 this._close();
             }});
         }
-        if (def.type === 'heal') {
+        if (def.type === 'heal' && (def.healAmount > 0 || def.curesPoison)) {
             actions.push({ label: 'USE', fn: () => {
                 InventorySystem.useHealItem(def.id);
                 AudioSynth.sfx('herb_use');
                 this._close();
             }});
         }
+        if (def.type === 'ammo' && InventorySystem.getEquippedWeapon()?.def?.ammoType === def.id) {
+            actions.push({ label: 'RELOAD', color: '#88ff99', fn: () => {
+                if (InventorySystem.reload()) {
+                    AudioSynth.sfx('reload');
+                    this._close();
+                }
+            }});
+        }
         if (def.type === 'file') {
             actions.push({ label: 'READ', fn: () => {
                 this.scene.launch(CONFIG.SCENES.DIALOGUE, {
                     singleText: def.fileContent || def.examineText || def.desc,
+                    fileId: def.id,
                     callerScene: CONFIG.SCENES.INVENTORY,
                 });
             }});
@@ -453,7 +471,7 @@ class InventoryScene extends Phaser.Scene {
                 });
             }});
         }
-        if (def.type !== 'key') actions.push({ label: 'DISCARD', fn: () => {
+        if (def.type !== 'key' && def.id !== 'knife') actions.push({ label: 'DISCARD', fn: () => {
             InventorySystem.removeItem(def.id);
             this._close();
         }});

@@ -22,11 +22,13 @@ class GameScene extends Phaser.Scene {
         this._bossTriggers = [];
         this._entryLockPos = null;
         this._transitionCooldown = 0;
+        this._storyHintUntil = 0;
         this._isBusy = false;
         const state = SaveSystem.getState();
         if (state && (SaveSystem.getFlag(CONFIG.FLAGS.ACT1_LEON_FOUND) ||
             MAPS.restaurant_hall.objects.some((o, i) => o.npcId === 'leon' &&
                 SaveSystem.getFlag(`npc_spoken_restaurant_hall_${i}`)))) {
+            SaveSystem.setFlag(CONFIG.FLAGS.ACT1_LEON_FOUND);
             this._companionRegistry.push({ npcId: 'leon', companionDialogueId: 'leon_companion' });
         }
         if (SaveSystem.getFlag(CONFIG.FLAGS.ACT2_LUCIA_LOCATED)) {
@@ -48,10 +50,6 @@ class GameScene extends Phaser.Scene {
         // Init save state if needed
         if (!SaveSystem.getState()) {
             SaveSystem.newGame();
-            InventorySystem.addItem('knife');
-            InventorySystem.addItem('barry_revolver');
-            InventorySystem.addItem('ammo_357', 2);
-            InventorySystem.equipWeapon('barry_revolver');
         }
 
         // Camera settings
@@ -481,6 +479,20 @@ class GameScene extends Phaser.Scene {
     // =========================================================
     // ROOM TRANSITIONS
     // =========================================================
+    _storyPartyReady() {
+        return SaveSystem.getFlag(CONFIG.FLAGS.ACT1_LEON_FOUND) &&
+            SaveSystem.getFlag(CONFIG.FLAGS.ACT2_LUCIA_LOCATED);
+    }
+
+    _showMissingCompanionMessage() {
+        if (this._storyHintUntil && this.time.now < this._storyHintUntil) return;
+        this._storyHintUntil = this.time.now + 2500;
+        const message = !SaveSystem.getFlag(CONFIG.FLAGS.ACT1_LEON_FOUND) ?
+            'Find Leon in the restaurant hall before entering the cargo hold.' :
+            'Find Lucia in the engine room antechamber or the laboratory first.';
+        this._showFloatingMessage(message, '#ffcc88');
+    }
+
     _checkRoomTransitions() {
         if (!this._player || this._isBusy) return;
         if (this._transitionCooldown && this.time.now < this._transitionCooldown) return;
@@ -506,6 +518,10 @@ class GameScene extends Phaser.Scene {
             const dist = Phaser.Math.Distance.Between(player.x, player.y, triggerX, triggerY);
 
             if (dist < S * 0.8) {
+                if (conn.targetRoom === 'cargo_hold' && !this._storyPartyReady()) {
+                    this._showMissingCompanionMessage();
+                    return;
+                }
                 if (conn.locked && !SaveSystem.isDoorOpen(conn.doorId)) {
                     if (conn.keyId && InventorySystem.hasItem(conn.keyId)) {
                         SaveSystem.markDoorOpened(conn.doorId);
@@ -804,6 +820,7 @@ class GameScene extends Phaser.Scene {
                 this._player.lockInput(true);
                 this.scene.launch(CONFIG.SCENES.DIALOGUE, {
                     singleText: def.fileContent || def.examineText,
+                    fileId: def.id,
                     callerScene: CONFIG.SCENES.GAME,
                 });
             }
@@ -867,6 +884,19 @@ class GameScene extends Phaser.Scene {
         });
     }
 
+    // Exploration is zoomed; keep modal menus at their intended screen size.
+    _fitMenuToCamera(objects) {
+        const zoom = this.cameras?.main?.zoom || 1;
+        if (zoom === 1) return;
+        for (const object of objects) {
+            object.setPosition(
+                (object.x - CONFIG.WIDTH / 2) / zoom + CONFIG.WIDTH / 2,
+                (object.y - CONFIG.HEIGHT / 2) / zoom + CONFIG.HEIGHT / 2
+            );
+            object.setScale(1 / zoom);
+        }
+    }
+
     _showSaveMenu() {
         if (this._isBusy) return;
         this._isBusy = true;
@@ -894,9 +924,7 @@ class GameScene extends Phaser.Scene {
             fontSize: '9px', fontFamily: 'Share Tech Mono', color: '#447755',
             wordWrap: { width: 380 }, align: 'center',
         }).setOrigin(0.5).setScrollFactor(0).setDepth(102);
-        uiRefs.push(quoteText);
-
-        const uiRefs = [overlay, panel, header];
+        const uiRefs = [overlay, panel, header, quoteText];
 
         // Declare escKey early so close() can reference it for cleanup.
         const escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
@@ -947,91 +975,75 @@ class GameScene extends Phaser.Scene {
         }).setOrigin(0.5).setScrollFactor(0).setDepth(102);
         uiRefs.push(closeText);
 
+        this._fitMenuToCamera(uiRefs);
         escKey.once('down', close);
     }
 
-    _showItemBox() {
+    _showItemBox(mode = 'deposit', page = 0) {
         if (this._isBusy) return;
         this._isBusy = true;
         this._player?.lockInput(true);
-
         const W = CONFIG.WIDTH, H = CONFIG.HEIGHT;
-        const box = SaveSystem.getState()?.itemBox || [];
-
+        const depositing = mode === 'deposit';
+        const items = (depositing ? InventorySystem.getInventory() : InventorySystem.getItemBox())
+            .filter(item => item.id !== 'knife');
+        const pages = Math.max(1, Math.ceil(items.length / 5));
+        page = Math.max(0, Math.min(page, pages - 1));
+        const uiRefs = [];
         const overlay = this.add.graphics().setScrollFactor(0).setDepth(100);
-        overlay.fillStyle(0x000000, 0.85);
+        overlay.fillStyle(0x000000, 0.9);
         overlay.fillRect(0, 0, W, H);
-
+        uiRefs.push(overlay);
         const panel = this.add.graphics().setScrollFactor(0).setDepth(101);
         panel.fillStyle(0x060c10, 1);
-        panel.fillRect(W / 2 - 220, H / 2 - 180, 440, 360);
+        panel.fillRect(W / 2 - 235, H / 2 - 205, 470, 415);
         panel.lineStyle(2, 0x00cc66, 0.4);
-        panel.strokeRect(W / 2 - 220, H / 2 - 180, 440, 360);
-
-        const header = this.add.text(W / 2, H / 2 - 160, '— ITEM BOX —', {
-            fontSize: '12px', fontFamily: 'Share Tech Mono', color: '#00cc66', letterSpacing: 5,
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(102);
-
-        const uiRefs = [overlay, panel, header];
-
+        panel.strokeRect(W / 2 - 235, H / 2 - 205, 470, 415);
+        uiRefs.push(panel);
+        const text = (x, y, label, action) => {
+            const obj = this.add.text(x, y, label, {
+                fontSize: '12px', fontFamily: UITheme.font, color: '#99ccaa',
+            }).setScrollFactor(0).setDepth(102);
+            uiRefs.push(obj);
+            if (action) obj.setInteractive({ useHandCursor: true }).on('pointerdown', action);
+            return obj;
+        };
         const escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
         let closed = false;
         const close = () => {
             if (closed) return;
             closed = true;
             this.input.keyboard.removeKey(escKey);
-            uiRefs.forEach(r => r.destroy());
+            uiRefs.forEach(obj => obj.destroy());
             this._isBusy = false;
             this._player?.lockInput(false);
         };
-
-        if (box.length === 0) {
-            const empty = this.add.text(W / 2, H / 2, 'Item Box is empty.', {
-                fontSize: '10px', fontFamily: 'Share Tech Mono', color: '#446655',
-            }).setOrigin(0.5).setScrollFactor(0).setDepth(102);
-            uiRefs.push(empty);
-        } else {
-            box.forEach((boxItem, i) => {
-                const def = ITEMS[boxItem.id?.toUpperCase()] || Object.values(ITEMS).find(it => it.id === boxItem.id);
-                if (!def) return;
-                const yy = H / 2 - 120 + i * 44;
-
-                const rowBg = this.add.graphics().setScrollFactor(0).setDepth(101);
-                rowBg.fillStyle(0x0d1e12, 1);
-                rowBg.fillRect(W / 2 - 200, yy - 14, 400, 36);
-                rowBg.lineStyle(1, 0x1a4028, 1);
-                rowBg.strokeRect(W / 2 - 200, yy - 14, 400, 36);
-                uiRefs.push(rowBg);
-
-                const label = this.add.text(W / 2 - 180, yy, `${def.name}  ×${boxItem.qty || 1}`, {
-                    fontSize: '10px', fontFamily: 'Share Tech Mono', color: '#99ccaa',
-                }).setScrollFactor(0).setDepth(102);
-                uiRefs.push(label);
-
-                const takeBtn = this.add.text(W / 2 + 170, yy, '[TAKE]', {
-                    fontSize: '10px', fontFamily: 'Share Tech Mono', color: '#44cc88',
-                }).setOrigin(1, 0).setScrollFactor(0).setDepth(102).setInteractive({ useHandCursor: true });
-
-                takeBtn.on('pointerover', () => takeBtn.setColor('#ffffff'));
-                takeBtn.on('pointerout', () => takeBtn.setColor('#44cc88'));
-                takeBtn.on('pointerdown', () => {
-                    if (InventorySystem.withdrawFromBox(boxItem.id)) {
-                        AudioSynth.sfx('item_pickup');
-                        EventSystem.emit('inventory_changed', {});
-                        close();
-                    } else {
-                        this._showFloatingMessage('Inventory full!', '#ff4444');
-                    }
-                });
-                uiRefs.push(takeBtn);
+        const reopen = (nextMode, nextPage = 0) => {
+            close();
+            this._showItemBox(nextMode, nextPage);
+        };
+        text(W / 2 - 210, H / 2 - 180, 'ITEM BOX — ' + (depositing ? 'DEPOSIT' : 'TAKE'));
+        text(W / 2 - 210, H / 2 - 145, '[DEPOSIT]', () => reopen('deposit'));
+        text(W / 2 + 70, H / 2 - 145, '[TAKE]', () => reopen('withdraw'));
+        if (!items.length) text(W / 2 - 210, H / 2 - 80, 'No items available.');
+        items.slice(page * 5, page * 5 + 5).forEach((item, i) => {
+            const def = InventorySystem._getDef(item.id);
+            const y = H / 2 - 95 + i * 42;
+            text(W / 2 - 210, y, `${def.name} ×${item.qty}`);
+            text(W / 2 + 135, y, depositing ? '[STORE]' : '[TAKE]', () => {
+                const ok = depositing ? InventorySystem.depositToBox(item.id) : InventorySystem.withdrawFromBox(item.id);
+                if (ok) {
+                    AudioSynth.sfx('item_pickup');
+                    EventSystem.emit('inventory_changed', {});
+                    reopen(mode, page);
+                } else this._showFloatingMessage('Inventory full!', '#ff4444');
             });
-        }
-
-        const closeHint = this.add.text(W / 2, H / 2 + 155, '[ESC] CLOSE', {
-            fontSize: '10px', fontFamily: 'Share Tech Mono', color: '#446655',
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(102);
-        uiRefs.push(closeHint);
-
+        });
+        if (page > 0) text(W / 2 - 210, H / 2 + 135, '[PREV]', () => reopen(mode, page - 1));
+        text(W / 2 - 20, H / 2 + 135, `${page + 1}/${pages}`);
+        if (page + 1 < pages) text(W / 2 + 135, H / 2 + 135, '[NEXT]', () => reopen(mode, page + 1));
+        text(W / 2 - 210, H / 2 + 175, '[ESC] CLOSE', close);
+        this._fitMenuToCamera(uiRefs);
         escKey.once('down', close);
     }
 
@@ -1096,6 +1108,7 @@ class GameScene extends Phaser.Scene {
         this.time.delayedCall(300, () => {
             this.scene.launch(CONFIG.SCENES.COMBAT, {
                 enemyId: data.enemyId,
+                enemyHp: data.enemy?.hp,
                 enemyIndex: data.enemyIndex,
                 roomId: data.roomId,
                 isBoss: data.isBoss || false,
@@ -1242,8 +1255,9 @@ class GameScene extends Phaser.Scene {
     // CUTSCENES
     // =========================================================
     _triggerCutscene(cutsceneId) {
-        if (!DIALOGUES[cutsceneId]) return;
-        if (this._isBusy) return; // Don't launch dialogue if combat/transition already running
+        if (!DIALOGUES[cutsceneId]) return false;
+        if (cutsceneId === 'act3_creature_revealed' && !this._storyPartyReady()) return false;
+        if (this._isBusy) return false; // Don't launch dialogue if combat/transition already running
         this._isBusy = true;
         this._player?.lockInput(true);
 
@@ -1258,6 +1272,7 @@ class GameScene extends Phaser.Scene {
             dialogueId: cutsceneId,
             callerScene: CONFIG.SCENES.GAME,
         });
+        return true;
     }
 
     _triggerEnding() {
@@ -1373,9 +1388,10 @@ class GameScene extends Phaser.Scene {
                 if (trig.triggered) continue;
                 const dist = Phaser.Math.Distance.Between(px, py, trig.px, trig.py);
                 if (dist < trig.radius) {
-                    trig.triggered = true;
-                    this._triggerCutscene(trig.cutsceneId);
-                    return;
+                    if (this._triggerCutscene(trig.cutsceneId)) {
+                        trig.triggered = true;
+                        return;
+                    }
                 }
             }
         }
@@ -1386,16 +1402,20 @@ class GameScene extends Phaser.Scene {
                 if (trig.triggered) continue;
                 const dist = Phaser.Math.Distance.Between(px, py, trig.px, trig.py);
                 if (dist < trig.radius) {
-                    trig.triggered = true;
                     if (trig.cutsceneId && !SaveSystem.getFlag(`cs_${trig.cutsceneId}`)) {
-                        this._triggerCutscene(trig.cutsceneId);
+                        if (this._triggerCutscene(trig.cutsceneId)) {
+                            trig.triggered = true;
+                            return;
+                        }
                     } else if (trig.bossId !== 'creature_p1') {
+                        trig.triggered = true;
                         EventSystem.emit('combat_triggered', {
                             enemyId: trig.bossId,
                             enemyIndex: -1,
                             roomId: this._currentRoomId,
                             isBoss: true,
                         });
+                        return;
                     }
                 }
             }
@@ -1407,6 +1427,10 @@ class GameScene extends Phaser.Scene {
     // =========================================================
     _handleTwoLeonsScene() {
         if (SaveSystem.getFlag(CONFIG.FLAGS.ACT4_LEON_SPLIT)) return;
+        if (!this._storyPartyReady()) {
+            this._showMissingCompanionMessage();
+            return;
+        }
         SaveSystem.setFlag(CONFIG.FLAGS.ACT4_LEON_SPLIT);
 
         this._isBusy = true;
@@ -1431,7 +1455,7 @@ class GameScene extends Phaser.Scene {
             fontSize: '11px', fontFamily: 'Share Tech Mono', color: '#cc4444', letterSpacing: 4,
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
 
-        const questionText = this.add.text(W / 2, H / 2 - 100, '"What was the name of the girl you escaped Raccoon City with?"', {
+        const questionText = this.add.text(W / 2, H / 2 - 100, DIALOGUES.act4_two_leons_question[0].text, {
             fontSize: '11px', fontFamily: 'Share Tech Mono', color: '#888', wordWrap: { width: 500 }, align: 'center',
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
 
@@ -1442,6 +1466,7 @@ class GameScene extends Phaser.Scene {
 
         const elements = [overlay, titleText, questionText];
 
+        let resolved = false;
         choices.forEach((choice, i) => {
             const yy = H / 2 - 20 + i * 60;
             const bg = this.add.graphics().setScrollFactor(0).setDepth(201);
@@ -1458,14 +1483,15 @@ class GameScene extends Phaser.Scene {
             txt.on('pointerout', () => { bg.clear(); bg.fillStyle(0x1a0a0a, 1); bg.fillRect(W / 2 - 200, yy - 20, 400, 44); bg.lineStyle(1, 0x442222, 1); bg.strokeRect(W / 2 - 200, yy - 20, 400, 44); });
 
             txt.on('pointerdown', () => {
+                if (resolved) return;
+                resolved = true;
                 elements.forEach(e => e.destroy());
-                bg.destroy();
-                txt.destroy();
                 this._resolveTwoLeonsChoice(choice.correct);
             });
 
             elements.push(bg, txt);
         });
+        this._fitMenuToCamera(elements);
     }
 
     _resolveTwoLeonsChoice(choseCorrectly) {

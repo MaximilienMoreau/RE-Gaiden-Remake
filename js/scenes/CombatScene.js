@@ -20,8 +20,8 @@ class CombatScene extends Phaser.Scene {
         const def = ENEMIES[this._enemyId?.toUpperCase()] ||
                     Object.values(ENEMIES).find(e => e.id === this._enemyId);
         this._enemyDef = def;
-        this._enemyHp = def ? def.hp : 100;
-        this._enemyMaxHp = this._enemyHp;
+        this._enemyMaxHp = def ? def.hp : 100;
+        this._enemyHp = Number.isFinite(data.enemyHp) ? Math.max(1, Math.min(data.enemyHp, this._enemyMaxHp)) : this._enemyMaxHp;
         this._phase = 1;
 
         // Reticle state
@@ -430,7 +430,7 @@ class CombatScene extends Phaser.Scene {
     }
 
     _fireWeapon() {
-        if (this._finished || this._turnPhase !== 'player') return;
+        if (this._finished || this._victory || this._turnPhase !== 'player') return;
 
         // Melee weapon — skip reticle and ammo entirely
         if (this._isMelee) {
