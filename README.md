@@ -69,7 +69,8 @@
 |:---:|---|
 | `WASD` / `↑↓←→` | Move |
 | `SHIFT` | Run |
-| `E` | Interact · Pick up · Talk |
+| `E` | Pick up · Interact · Talk to characters who have not joined |
+| `T` | Talk to a nearby following companion |
 | `I` | Open inventory |
 | `R` | Reload weapon |
 | `SPACE` / `ENTER` | Advance dialogue |
@@ -125,6 +126,10 @@ Each ammo item in inventory represents a **box** of rounds loaded per use:
 | `9mm Rounds` | 15 | SIG P226 Handgun; Leon's sidearm |
 | `12-Gauge Shells` | 6 | Remington M870 Shotgun |
 
+Barry's **Colt Python .357** can be picked up in **Cabin 101**, near the top center
+of the safe room. It is also available when revisiting the room in an older save.
+Barry still begins with his knife equipped.
+
 > **Switching weapons** preserves each weapon's loaded chamber — you won't lose rounds by switching away and back.
 
 ---
@@ -139,6 +144,8 @@ After key story beats, **Leon** and **Lucia** join Barry and follow him through 
 | **Lucia** | Found in the engine room antechamber | Attacks enemies, immune to the virus |
 
 Companions match Barry's walking speed and sprint to catch up when they fall behind.
+They find routes around walls and crates, and can only attack enemies with a clear
+line of sight. Nearby enemies also require a clear line of sight to start combat.
 
 ---
 
@@ -339,3 +346,26 @@ finish the adventure. Older saves without reading flags use the unconsulted vari
 The final identification question uses the same wording in dialogue and in the
 choice menu; its clue is introduced when Leon joins. Cutscene staging follows
 Barry's equipped weapon, including his knife or an empty firearm.
+
+
+Key pickups have larger icons, bright pulsing rings, overhead arrows and persistent
+name labels that remain visible over the darkness. A nearby pickup shows its
+name with **[E]**. Pickups take priority over other interactions, with the nearest
+item selected. Following companions use **[T]** so they cannot interrupt **[E]**.
+
+
+The cargo-hold identification scene displays two enlarged, identically dressed
+Leons, labelled A and B, throughout the dialogue and choice. After the correct
+identification, a non-skippable visual sequence shakes and distorts the impostor,
+opens a red fissure and reveals GENESIS-01 while the survivor steps back. The
+final fight begins only after the creature has been fully revealed.
+
+
+Combat loot that does not fit in the inventory becomes a pickup on the floor. It
+remains in that room through transitions and saves until successfully collected.
+Enemy defeats are recorded at the start of the death animation, so leaving the
+room immediately cannot resurrect them.
+
+Both inventory discard menus now ask for confirmation. **CANCEL** or **Escape**
+keeps the item; **CONFIRM DISCARD** removes one unit permanently. Keys and Barry's
+knife remain protected.

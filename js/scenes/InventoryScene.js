@@ -351,8 +351,7 @@ class InventoryScene extends Phaser.Scene {
             }});
         }
         if (def.type !== 'key' && def.id !== 'knife') actions.push({ label: 'DISCARD', color: '#cc6666', fn: () => {
-            InventorySystem.removeItem(def.id);
-            this._close();
+            this._confirmDiscard(def.id);
         }});
 
         const bX = this._detailX + 8;
@@ -472,8 +471,7 @@ class InventoryScene extends Phaser.Scene {
             }});
         }
         if (def.type !== 'key' && def.id !== 'knife') actions.push({ label: 'DISCARD', fn: () => {
-            InventorySystem.removeItem(def.id);
-            this._close();
+            this._confirmDiscard(def.id);
         }});
 
         // Build menu
@@ -505,6 +503,39 @@ class InventoryScene extends Phaser.Scene {
         });
 
         this._contextMenu = menuItems;
+    }
+
+    _confirmDiscard(itemId) {
+        if (this._contextMenu || this._closing) return;
+        const def = InventorySystem._getDef(itemId);
+        if (!def || def.type === 'key' || itemId === 'knife' || !InventorySystem.hasItem(itemId)) return;
+        const W = CONFIG.WIDTH, H = CONFIG.HEIGHT;
+        const overlay = this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.85)
+            .setDepth(200).setInteractive();
+        const panel = this.add.rectangle(W / 2, H / 2, 480, 190, 0x111923)
+            .setDepth(201).setStrokeStyle(1, 0xa65a53);
+        const prompt = this.add.text(W / 2, H / 2 - 55, `Discard one ${def.name}?\nThis cannot be undone.`, {
+            fontFamily: UITheme.font, fontSize: '15px', color: '#edf0ed', align: 'center',
+            wordWrap: { width: 440 },
+        }).setOrigin(0.5).setDepth(202);
+        const cancel = this.add.text(W / 2 - 120, H / 2 + 40, 'CANCEL [ESC]', {
+            fontFamily: UITheme.font, fontSize: '13px', color: '#b9c8d7',
+        }).setOrigin(0.5).setDepth(202).setInteractive({ useHandCursor: true });
+        const confirm = this.add.text(W / 2 + 120, H / 2 + 40, 'CONFIRM DISCARD', {
+            fontFamily: UITheme.font, fontSize: '13px', color: '#ff9287',
+        }).setOrigin(0.5).setDepth(202).setInteractive({ useHandCursor: true });
+        const refs = [overlay, panel, prompt, cancel, confirm];
+        this._contextMenu = refs;
+        let resolved = false;
+        const finish = discard => {
+            if (resolved || this._contextMenu !== refs) return;
+            resolved = true;
+            refs.forEach(obj => obj.destroy());
+            this._contextMenu = null;
+            if (discard && InventorySystem.removeItem(itemId)) this._close();
+        };
+        cancel.on('pointerdown', () => finish(false));
+        confirm.on('pointerdown', () => finish(true));
     }
 
     _close() {

@@ -88,6 +88,7 @@ class Player extends Phaser.GameObjects.Container {
             interact: Phaser.Input.Keyboard.KeyCodes.E,
             inventory: Phaser.Input.Keyboard.KeyCodes.I,
             reload: Phaser.Input.Keyboard.KeyCodes.R,
+            talk: Phaser.Input.Keyboard.KeyCodes.T,
         });
     }
 
@@ -158,6 +159,10 @@ class Player extends Phaser.GameObjects.Container {
         // Interact key
         if (Phaser.Input.Keyboard.JustDown(keys.interact)) {
             EventSystem.emit('player_interact', { x: this.x, y: this.y });
+        }
+
+        if (Phaser.Input.Keyboard.JustDown(keys.talk)) {
+            EventSystem.emit('player_talk', {});
         }
 
         // Inventory key

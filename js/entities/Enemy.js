@@ -105,7 +105,8 @@ class Enemy extends Phaser.GameObjects.Container {
                 }
                 this._chasePlayer(dx, dy, dist, dt);
                 // Trigger combat when close enough
-                if (dist < 48 && time - this._lastAttack > (this.def?.attackRate || 2000)) {
+                if (dist < 48 && time - this._lastAttack > (this.def?.attackRate || 2000) &&
+                    RoomNavigation.hasLineOfSight(MAPS[this.roomId], this.x, this.y, player.x, player.y)) {
                     this._lastAttack = time;
                     this._triggerCombat();
                 }
@@ -194,6 +195,13 @@ class Enemy extends Phaser.GameObjects.Container {
         this._state = 'dead';
         if (this.body) this.body.setVelocity(0, 0);
 
+        // Persist the outcome before any transition can cancel the death tween.
+        SaveSystem.markEnemyDefeated(this.roomId, this.enemyIndex);
+        EventSystem.emit('enemy_killed', {
+            enemyId: this.enemyId, enemyIndex: this.enemyIndex, roomId: this.roomId,
+            x: this.x, y: this.y,
+        });
+
         // Death animation
         if (!this.scene) return;
         this.scene.tweens.add({
@@ -203,18 +211,11 @@ class Enemy extends Phaser.GameObjects.Container {
             duration: 600,
             onComplete: () => {
                 if (!this.scene) return;
-                if (this.scene.textures.exists('blood_pool')) {
+                if (this.scene._currentRoomId === this.roomId && this.scene.textures.exists('blood_pool')) {
                     const pool = this.scene.add.image(this.x, this.y, 'blood_pool');
                     pool.setDepth(0);
                     pool.setAlpha(0.7);
                 }
-                EventSystem.emit('enemy_killed', {
-                    enemyId: this.enemyId,
-                    enemyIndex: this.enemyIndex,
-                    roomId: this.roomId,
-                    x: this.x,
-                    y: this.y,
-                });
                 this.destroy();
             },
         });

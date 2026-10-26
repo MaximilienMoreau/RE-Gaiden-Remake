@@ -130,6 +130,7 @@ const MAPS = {
             { type: 'item', tx: 8, ty: 5, itemId: 'ammo_357' },
             { type: 'examine', tx: 9, ty: 4, text: 'examine.typewriter' },
             { type: 'examine', tx: 6, ty: 5, text: 'examine.mirror_cabin' },
+            { type: 'item', tx: 5, ty: 2, itemId: 'barry_revolver' },
         ],
         connections: {
             north: { tx: 4, ty: 7, targetRoom: 'deck_corridor_a', targetTx: 2, targetTy: 1 },

@@ -20,6 +20,7 @@ class DialogueScene extends Phaser.Scene {
         this._callerScene = data.callerScene || CONFIG.SCENES.GAME;
         this._onComplete = data.onComplete;
         this._fileId = data.fileId;
+        this._cinematicBackdrop = !!data.cinematicBackdrop;
     }
 
     create() {
@@ -41,7 +42,7 @@ class DialogueScene extends Phaser.Scene {
 
         // Semi-transparent overlay
         this._overlay = this.add.graphics();
-        this._overlay.fillStyle(0x000000, 0.6);
+        this._overlay.fillStyle(0x000000, this._cinematicBackdrop ? 0.18 : 0.6);
         this._overlay.fillRect(0, 0, W, H);
 
         // Cinematic bars

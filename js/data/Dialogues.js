@@ -161,9 +161,9 @@ const DIALOGUES = {
         {"speaker": "BARRY", "text": "Claire Redfield. That's the name Chris gave me."},
         {"speaker": "LEON", "text": "Her brother was S.T.A.R.S., like you. Barry, get Lucia back."},
         {"speaker": "SYSTEM", "text": "[The other Leon reaches for Lucia. Barry puts himself between them.]", "style": "action"},
-        {"speaker": "SYSTEM", "text": "[The false Leon's face splits. Its borrowed voice becomes a shriek.]", "style": "red"},
+        {"speaker": "SYSTEM", "text": "[The false Leon freezes. Something moves beneath its skin.]", "style": "red"},
         {"speaker": "BARRY", "text": "You picked the wrong face."},
-        {"speaker": "SYSTEM", "text": "FINAL ENCOUNTER INITIATED.", "style": "red"},
+        {"speaker": "BARRY", "text": "Stay back. Both of you."},
     ],
 
     act4_lucia_saves_leon: [

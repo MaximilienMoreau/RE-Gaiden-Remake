@@ -34,6 +34,8 @@ const SaveSystem = {
             defeatedEnemies: {}, // roomId -> [enemyIndex]
             collectedItems: {}, // roomId -> [objectIndex]
             openedDoors: [],
+            droppedItems: {},
+            nextDropId: 0,
             // Act tracking
             currentAct: CONFIG.ACTS.ACT1,
         };
@@ -112,6 +114,40 @@ const SaveSystem = {
         return this._state ? this._state.openedDoors.includes(doorId) : false;
     },
 
+    addDroppedItem(roomId, itemId, tx, ty) {
+        if (!this._state || !MAPS[roomId] || !InventorySystem._getDef(itemId)) return null;
+        this._state.droppedItems ||= {};
+        this._state.nextDropId ||= 0;
+        const drop = { dropId: `loot_${this._state.nextDropId++}`, itemId, tx, ty };
+        (this._state.droppedItems[roomId] ||= []).push(drop);
+        return drop;
+    },
+
+    getDroppedItems(roomId) {
+        return this._state?.droppedItems?.[roomId] || [];
+    },
+
+    collectDroppedItem(roomId, dropId) {
+        const drops = this.getDroppedItems(roomId);
+        const index = drops.findIndex(drop => drop.dropId === dropId);
+        if (index !== -1) drops.splice(index, 1);
+    },
+
+    _validDroppedItems(state) {
+        if (state.droppedItems === undefined) return true;
+        if (!state.droppedItems || typeof state.droppedItems !== 'object' || Array.isArray(state.droppedItems) ||
+            !Number.isInteger(state.nextDropId) || state.nextDropId < 0) return false;
+        const ids = new Set();
+        return Object.entries(state.droppedItems).every(([roomId, drops]) => MAPS[roomId] && Array.isArray(drops) && drops.every(drop => {
+            if (!drop || typeof drop.dropId !== 'string' || ids.has(drop.dropId) ||
+                !Object.values(ITEMS).some(item => item.id === drop.itemId) ||
+                !Number.isInteger(drop.tx) || !Number.isInteger(drop.ty) ||
+                !RoomNavigation.isWalkable(MAPS[roomId], drop.tx, drop.ty)) return false;
+            ids.add(drop.dropId);
+            return true;
+        }));
+    },
+
     // =========================================================
     // PERSISTENCE
     // =========================================================
@@ -138,6 +174,8 @@ const SaveSystem = {
             if (this._validState(allSaves[slot])) {
                 this._state = allSaves[slot];
                 this._state.weaponAmmoMap ||= {};
+                this._state.droppedItems ||= {};
+                this._state.nextDropId ||= 0;
                 this._restoreKnife();
                 return true;
             }
@@ -194,7 +232,7 @@ const SaveSystem = {
         if (!state || state.version !== 1 || !state.player || !MAPS[state.player.currentRoom]) return false;
         const p = state.player;
         const room = MAPS[p.currentRoom];
-        return Number.isFinite(state.timestamp) && Number.isFinite(p.hp) &&
+        return this._validDroppedItems(state) && Number.isFinite(state.timestamp) && Number.isFinite(p.hp) &&
             Number.isFinite(p.hpMax) && p.hpMax > 0 && p.hp >= 0 && p.hp <= p.hpMax &&
             p.position && Number.isInteger(p.position.tx) && Number.isInteger(p.position.ty) &&
             p.position.tx >= 0 && p.position.tx < room.tileWidth &&
